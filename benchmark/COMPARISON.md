@@ -14,11 +14,11 @@ All numbers here come from published benchmarks or public repositories. We link 
 |---|---|---|---|
 | **agentmemory** (BM25 + Vector) | LongMemEval-S | **95.2%** | `all-MiniLM-L6-v2` embeddings, no API key |
 | agentmemory (BM25-only) | LongMemEval-S | 86.2% | Fallback when no embedding provider available |
-| MemPalace | LongMemEval-S | ~96.6% | Vector-only, bigger embedding model |
+| MemPalace | LongMemEval-S | ~96.6% (self-reported) | Vendor-published number we have not independently reproduced. Vector-only with a larger embedding model and no agent-integration surface (no hooks, no MCP, no multi-agent) |
 | Letta / MemGPT | LoCoMo | 83.2% | Different benchmark (LoCoMo, not LongMemEval) |
 | Mem0 | LoCoMo | 68.5% | Different benchmark (LoCoMo, not LongMemEval) |
 
-**⚠️ Apples vs oranges caveat:** agentmemory and MemPalace are measured on LongMemEval-S. Letta and Mem0 publish on [LoCoMo](https://snap-stanford.github.io/LoCoMo/), a different benchmark. We're showing both so you can see the ballpark. We'd love to run all four on the same dataset — if any maintainer wants to collaborate, open an issue.
+**⚠️ Apples vs oranges caveat:** only agentmemory's 95.2% is our own measured result, reproducible from the methodology below. Every other number here is the vendor's published claim, on a different benchmark or harness, that we have not independently reproduced: MemPalace reports LongMemEval-S, while Letta and Mem0 publish on [LoCoMo](https://snap-stanford.github.io/LoCoMo/). Treat them as ballpark vendor claims, not a head-to-head on identical data. We'd love to run every system on the same dataset; if any maintainer wants to collaborate, open an issue.
 
 Full agentmemory methodology: [`LONGMEMEVAL.md`](LONGMEMEVAL.md)
 
@@ -26,26 +26,26 @@ Full agentmemory methodology: [`LONGMEMEVAL.md`](LONGMEMEVAL.md)
 
 ## Feature Matrix
 
-| Feature | agentmemory | mem0 | Letta/MemGPT | Khoj | supermemory | Hippo |
-|---|---|---|---|---|---|---|
-| **GitHub stars** | Growing | 58K+ | 23K+ | 35K+ | 26K+ | Trending |
-| **Type** | Memory engine + MCP server | Memory layer API | Full agent runtime | Personal AI | Memory API + app | Memory system |
-| **Auto-capture via hooks** | ✅ 12 lifecycle hooks | ❌ Manual `add()` | ❌ Agent self-edits | ❌ Manual | ❌ API-side extraction | ❌ Manual |
-| **Search strategy** | BM25 + Vector + Graph | Vector + Graph | Vector (archival) | Semantic | Vector + RAG | Decay-weighted |
-| **Multi-agent coordination** | ✅ Leases + signals + mesh | ❌ | Runtime-internal only | ❌ | ❌ | Multi-agent shared |
-| **Framework lock-in** | None | None | High | Standalone | None (drop-in wrappers) | None |
-| **External deps** | None | Qdrant/pgvector | Postgres + vector | Multiple | Managed cloud | None |
-| **Self-hostable** | ✅ default | Optional | Optional | ✅ | ❌ Cloud-only | ✅ |
-| **Knowledge graph** | ✅ Entity extraction + BFS | ✅ Mem0g variant | ❌ | Doc links | ❌ | ❌ |
-| **Memory decay** | ✅ Ebbinghaus + tiered | ❌ | ❌ | ❌ | ✅ Auto-forget | ✅ Half-lives |
-| **4-tier consolidation** | ✅ Working → episodic → semantic → procedural | ❌ | OS-inspired tiers | ❌ | ❌ | Episodic + semantic |
-| **Version / supersession** | ✅ Jaccard-based | Passive | ❌ | ❌ | ✅ Auto-resolve | ❌ |
-| **Real-time viewer** | ✅ Port 3113 | Cloud dashboard | Cloud dashboard | Web UI | Cloud dashboard | ❌ |
-| **Privacy filtering** | ✅ Strips secrets pre-store | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Obsidian export** | ✅ Built-in | ❌ | ❌ | Native format | ❌ | ❌ |
-| **Cross-agent** | ✅ MCP + REST | API calls | Within runtime | Standalone | MCP + API | Multi-agent shared |
-| **Audit trail** | ✅ All mutations logged | ❌ | Limited | ❌ | ❌ | ❌ |
-| **Language SDKs** | Any (REST + MCP) | Python + TS | Python only | API | Python + TS | Node |
+| Feature | agentmemory | mem0 | Letta/MemGPT | Khoj | supermemory | MemPalace | Hippo |
+|---|---|---|---|---|---|---|---|
+| **GitHub stars** | Growing | 58K+ | 23K+ | 35K+ | 26K+ | 54K+ | Trending |
+| **Type** | Memory engine + MCP server | Memory layer API | Full agent runtime | Personal AI | Memory API + app | Benchmark-focused OSS | Memory system |
+| **Auto-capture via hooks** | ✅ 12 lifecycle hooks | ❌ Manual `add()` | ❌ Agent self-edits | ❌ Manual | ❌ API-side extraction | ❌ Manual | ❌ Manual |
+| **Search strategy** | BM25 + Vector + Graph | Vector + Graph | Vector (archival) | Semantic | Vector + RAG | Vector-only (large model) | Decay-weighted |
+| **Multi-agent coordination** | ✅ Leases + signals + mesh | ❌ | Runtime-internal only | ❌ | ❌ | ❌ | Multi-agent shared |
+| **Framework lock-in** | None | None | High | Standalone | None (drop-in wrappers) | None | None |
+| **External deps** | None | Qdrant/pgvector | Postgres + vector | Multiple | Managed cloud | Vector store | None |
+| **Self-hostable** | ✅ default | Optional | Optional | ✅ | ❌ Cloud-only | ✅ | ✅ |
+| **Knowledge graph** | ✅ Entity extraction + BFS | ✅ Mem0g variant | ❌ | Doc links | ❌ | ❌ | ❌ |
+| **Memory decay** | ✅ Ebbinghaus + tiered | ❌ | ❌ | ❌ | ✅ Auto-forget | ❌ | ✅ Half-lives |
+| **4-tier consolidation** | ✅ Working → episodic → semantic → procedural | ❌ | OS-inspired tiers | ❌ | ❌ | ❌ | Episodic + semantic |
+| **Version / supersession** | ✅ Jaccard-based | Passive | ❌ | ❌ | ✅ Auto-resolve | ❌ | ❌ |
+| **Real-time viewer** | ✅ Port 3113 | Cloud dashboard | Cloud dashboard | Web UI | Cloud dashboard | ❌ | ❌ |
+| **Privacy filtering** | ✅ Strips secrets pre-store | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Obsidian export** | ✅ Built-in | ❌ | ❌ | Native format | ❌ | ❌ | ❌ |
+| **Cross-agent** | ✅ MCP + REST | API calls | Within runtime | Standalone | MCP + API | Standalone | Multi-agent shared |
+| **Audit trail** | ✅ All mutations logged | ❌ | Limited | ❌ | ❌ | ❌ | ❌ |
+| **Language SDKs** | Any (REST + MCP) | Python + TS | Python only | API | Python + TS | Python | Node |
 
 ---
 
@@ -102,6 +102,12 @@ This isn't a "agentmemory wins everything" page. Different tools solve different
 - Drop-in wrappers for major AI frameworks (Vercel AI, LangChain, LangGraph)
 - A hosted dashboard with no infrastructure to run yourself
 - RAG plus memory served from a single query
+
+**Choose MemPalace if you want:**
+- A simple, free, open-source vector memory store
+- To chase its self-reported retrieval benchmark (we have not reproduced it)
+- Pure retrieval over agent workflow features
+- Note: no auto-capture, no MCP, no multi-agent coordination, so you wire all integration yourself
 
 **Choose Hippo if you want:**
 - Biologically-inspired memory model (decay, consolidation, sleep)

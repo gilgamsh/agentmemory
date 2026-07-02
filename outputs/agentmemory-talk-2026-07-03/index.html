@@ -1,0 +1,1303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agentmemory: 让 coding agent 记住项目上下文</title>
+  <style>
+    :root {
+      --bg: #090a0b;
+      --panel: #111315;
+      --panel-2: #171a1d;
+      --line: #30363d;
+      --line-soft: #20252a;
+      --ink: #f3f0e8;
+      --muted: #a9b0b8;
+      --faint: #737b84;
+      --green: #64d38a;
+      --cyan: #5bc0de;
+      --amber: #f0b35a;
+      --red: #ff736e;
+      --violet: #b795ff;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(91, 192, 222, 0.12), transparent 28%),
+        radial-gradient(circle at 100% 100%, rgba(240, 179, 90, 0.08), transparent 30%),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      overflow: hidden;
+      letter-spacing: 0;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .deck-shell {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+
+    .deck {
+      position: relative;
+      width: min(100%, calc((100vh - 44px) * 16 / 9));
+      height: min(calc(100vh - 44px), calc((100vw - 44px) * 9 / 16));
+      aspect-ratio: 16 / 9;
+      background: #0d0f11;
+      border: 1px solid #272c31;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      padding: 44px 54px 42px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        #0c0e10;
+      background-size: 54px 54px;
+      overflow: hidden;
+    }
+
+    .slide.active { display: grid; }
+    .slide::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(var(--green), var(--cyan), var(--amber));
+    }
+
+    .slide.cover::before { width: 0; }
+    .slide.cover {
+      padding: 0;
+      background: #070809;
+    }
+
+    .cover-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.72;
+    }
+
+    .cover-shade {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(5, 6, 7, 0.94), rgba(5, 6, 7, 0.68) 46%, rgba(5, 6, 7, 0.2)),
+        linear-gradient(0deg, rgba(5, 6, 7, 0.9), rgba(5, 6, 7, 0.08) 52%);
+    }
+
+    .cover-content {
+      position: relative;
+      z-index: 1;
+      padding: 76px 72px;
+      display: grid;
+      align-content: end;
+      min-height: 100%;
+      max-width: 980px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 18px;
+      margin-bottom: 48px;
+    }
+
+    .brand-row img { width: 44px; height: 44px; }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      font-size: clamp(54px, 6.1vw, 82px);
+      line-height: 0.98;
+      font-weight: 760;
+      letter-spacing: 0;
+      max-width: 980px;
+    }
+    h2 {
+      font-size: clamp(34px, 4vw, 56px);
+      line-height: 1.04;
+      font-weight: 740;
+      letter-spacing: 0;
+      max-width: 1050px;
+    }
+    h3 {
+      font-size: 22px;
+      line-height: 1.16;
+      font-weight: 680;
+    }
+    p {
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    .kicker {
+      font-family: var(--mono);
+      color: var(--green);
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+
+    .subtitle {
+      color: #d7d2c8;
+      font-size: 26px;
+      line-height: 1.35;
+      margin-top: 24px;
+      max-width: 900px;
+    }
+
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 36px;
+      font-family: var(--mono);
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.035);
+      color: #dcd8ce;
+      font-family: var(--mono);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .accent { color: var(--green); }
+    .cyan { color: var(--cyan); }
+    .amber { color: var(--amber); }
+    .red { color: var(--red); }
+    .violet { color: var(--violet); }
+    .muted { color: var(--muted); }
+    .small { font-size: 15px; line-height: 1.45; }
+    .mono { font-family: var(--mono); }
+
+    .slide-header {
+      display: grid;
+      gap: 10px;
+      align-self: start;
+      position: relative;
+      z-index: 1;
+    }
+
+    .source {
+      color: var(--faint);
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .layout {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 24px;
+      align-self: stretch;
+      min-height: 0;
+    }
+    .two-col { grid-template-columns: 1.02fr 0.98fr; align-items: stretch; }
+    .three-col { grid-template-columns: repeat(3, 1fr); }
+    .wide-narrow { grid-template-columns: 1.28fr 0.72fr; }
+    .narrow-wide { grid-template-columns: 0.78fr 1.22fr; }
+    .rows { grid-template-rows: auto 1fr; }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 22px;
+      min-height: 0;
+    }
+
+    .panel h3 { margin-bottom: 12px; }
+    .panel p + p { margin-top: 12px; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .stat {
+      border-top: 2px solid var(--green);
+      background: rgba(255,255,255,0.035);
+      padding: 14px 14px 12px;
+      min-height: 92px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .stat strong {
+      font-size: 32px;
+      line-height: 1;
+      font-family: var(--mono);
+      color: var(--ink);
+    }
+    .stat span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bullet {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.42;
+    }
+    .bullet::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      margin-top: 10px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(100,211,138,0.12);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .flow-step {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px 16px;
+      background: #111416;
+      min-height: 164px;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+    .flow-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: -15px;
+      top: 50%;
+      width: 15px;
+      height: 2px;
+      background: var(--line);
+    }
+    .flow-step .num {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .flow-step h3 { font-size: 26px; }
+    .flow-step p { font-size: 16px; line-height: 1.45; }
+
+    .primitive-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .primitive {
+      min-height: 250px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      background: #111416;
+      display: grid;
+      align-content: start;
+      gap: 16px;
+    }
+    .primitive .glyph {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-family: var(--mono);
+      color: var(--green);
+      background: #0b0d0e;
+      font-size: 24px;
+    }
+    .primitive p { font-size: 17px; }
+
+    .code-line {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 16px;
+      color: #e7e1d5;
+      background: #090b0c;
+      border: 1px solid #242a30;
+      border-radius: 6px;
+      padding: 7px 9px;
+      white-space: nowrap;
+    }
+
+    .arch {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr 1.1fr;
+      grid-template-rows: repeat(4, minmax(76px, auto));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .arch-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111416;
+      padding: 14px;
+      display: grid;
+      align-content: center;
+      gap: 6px;
+      min-width: 0;
+    }
+    .arch-box strong { font-size: 18px; }
+    .arch-box span { color: var(--muted); font-size: 13px; line-height: 1.32; }
+    .arch-join {
+      position: relative;
+      display: grid;
+      place-items: center;
+      color: var(--faint);
+      font-family: var(--mono);
+      font-size: 14px;
+    }
+    .arch-join::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 2px;
+      background: var(--line);
+      z-index: -1;
+    }
+    .arch-core {
+      grid-column: 2 / span 2;
+      grid-row: 2 / span 2;
+      border-color: rgba(100,211,138,0.5);
+      background: linear-gradient(180deg, rgba(100,211,138,0.12), rgba(255,255,255,0.035));
+      text-align: center;
+    }
+    .arch-core strong { font-size: 30px; }
+
+    .hook-lanes {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 10px 16px;
+      align-items: stretch;
+    }
+    .lane-label {
+      color: var(--muted);
+      font-family: var(--mono);
+      display: grid;
+      place-items: center start;
+      border-top: 1px solid var(--line-soft);
+      min-height: 54px;
+    }
+    .lane {
+      border-top: 1px solid var(--line-soft);
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .hook {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #121619;
+      color: #e3ded2;
+      font-family: var(--mono);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .hook.capture { border-color: rgba(100,211,138,0.44); }
+    .hook.inject { border-color: rgba(91,192,222,0.48); }
+
+    .path-stack {
+      display: grid;
+      gap: 10px;
+    }
+    .path-row {
+      display: grid;
+      grid-template-columns: 34px 1fr 190px;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      background: #111416;
+      padding: 12px;
+    }
+    .path-row .index {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(100,211,138,0.14);
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .path-row strong { display: block; font-size: 17px; }
+    .path-row span { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; margin-top: 3px; }
+    .path-row code {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 13px;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .retrieval {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    .retrieval-source {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111416;
+      padding: 18px;
+      min-height: 174px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+    .retrieval-source .score {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 14px;
+    }
+    .formula {
+      border: 1px dashed #4c555e;
+      border-radius: 8px;
+      padding: 18px;
+      background: #0b0d0f;
+      font-family: var(--mono);
+      color: #e8e2d7;
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: 0.86fr 1.14fr;
+      gap: 18px;
+      min-height: 0;
+    }
+    .tool-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .tool-pill {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 12px;
+      background: #111416;
+      min-height: 76px;
+    }
+    .tool-pill code {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 14px;
+      display: block;
+      overflow-wrap: anywhere;
+    }
+    .tool-pill span { color: var(--muted); font-size: 13px; display: block; margin-top: 7px; line-height: 1.32; }
+
+    .governance {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .governance .panel {
+      min-height: 210px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+    .governance p { font-size: 16px; }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 18px;
+      min-height: 0;
+    }
+    .terminal {
+      background: #07090a;
+      border: 1px solid #2b3136;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: #d9d4ca;
+      line-height: 1.55;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .terminal .prompt { color: var(--green); }
+    .terminal .key { color: var(--cyan); }
+    .terminal .ok { color: var(--green); }
+
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      min-height: 0;
+    }
+    .shot {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #101316;
+      display: grid;
+      grid-template-rows: 24px 1fr;
+      min-height: 0;
+    }
+    .shot span {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      padding: 5px 8px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .shot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      min-height: 0;
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      min-height: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 17px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line-soft);
+      padding: 12px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    td strong { color: var(--green); font-family: var(--mono); }
+    td code { color: var(--amber); font-family: var(--mono); font-size: 14px; }
+
+    .practice {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .practice .panel {
+      min-height: 330px;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 14px;
+    }
+    .practice .big-num {
+      font-family: var(--mono);
+      color: var(--amber);
+      font-size: 38px;
+      line-height: 1;
+    }
+    .practice p { font-size: 17px; }
+
+    .footer-line {
+      position: absolute;
+      left: 54px;
+      right: 54px;
+      bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--faint);
+      font-family: var(--mono);
+      font-size: 12px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: rgba(8, 10, 11, 0.86);
+      backdrop-filter: blur(14px);
+      z-index: 10;
+    }
+    .controls button {
+      width: 38px;
+      height: 34px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .controls button:hover, .controls button.active {
+      border-color: var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--ink);
+    }
+    .page-indicator {
+      min-width: 68px;
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .notes-panel {
+      position: fixed;
+      right: 18px;
+      top: 18px;
+      bottom: 18px;
+      width: min(430px, 34vw);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(13, 15, 17, 0.96);
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.45);
+      z-index: 20;
+      padding: 18px;
+      display: none;
+      overflow: auto;
+    }
+    body.notes-open .notes-panel { display: block; }
+    .notes-panel h3 {
+      font-family: var(--mono);
+      color: var(--green);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .notes-panel p {
+      font-size: 15px;
+      line-height: 1.62;
+      color: #d8d2c7;
+    }
+    .speaker-note { display: none; }
+
+    @media (max-width: 840px) {
+      .deck-shell { padding: 0; }
+      .deck { width: 100vw; height: 100vh; border: 0; }
+      .slide { padding: 28px 28px 52px; }
+      h1 { font-size: 46px; }
+      h2 { font-size: 32px; }
+      p, .bullet { font-size: 17px; }
+      .two-col, .three-col, .wide-narrow, .narrow-wide, .tools-grid, .demo-grid, .evidence-grid, .practice {
+        grid-template-columns: 1fr;
+      }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .arch { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+      .arch-core { grid-column: span 2; grid-row: auto; }
+      .notes-panel { width: calc(100vw - 24px); right: 12px; left: 12px; }
+      .footer-line { left: 28px; right: 28px; }
+    }
+
+    @media print {
+      @page { size: 16in 9in; margin: 0; }
+      body { overflow: visible; background: #0c0e10; }
+      .deck-shell { display: block; width: auto; height: auto; padding: 0; }
+      .deck { width: 16in; height: auto; border: 0; box-shadow: none; overflow: visible; }
+      .slide {
+        position: relative;
+        display: grid !important;
+        width: 16in;
+        height: 9in;
+        page-break-after: always;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .controls, .notes-panel { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck-shell">
+    <div class="deck" id="deck">
+      <section class="slide cover active" data-title="封面">
+        <img class="cover-bg" src="assets/banner.png" alt="agentmemory banner" />
+        <div class="cover-shade"></div>
+        <div class="cover-content">
+          <div class="brand-row"><img src="assets/logo.svg" alt="agentmemory logo" /> agentmemory / 2026-07-03</div>
+          <h1>agentmemory: 让 coding agent 记住项目上下文</h1>
+          <p class="subtitle">从自动捕获、混合检索到跨 agent 协作，把“记忆”变成可运营的项目基础设施。</p>
+          <div class="meta-line">
+            <span class="tag">v0.9.27</span>
+            <span class="tag">iii-engine primitives</span>
+            <span class="tag">MCP / REST / Viewer</span>
+          </div>
+        </div>
+        <aside class="speaker-note">
+          <p>开场先定调：这不是一个“多存一点聊天记录”的项目，而是 coding agent 的上下文运行时。不逐行读源码，只讲路径级源码：哪些入口捕获信息，信息怎么进入索引，agent 后续怎么通过 MCP、REST 或 viewer 找回来。最后会明确边界，哪些能力默认零 LLM，哪些是 opt-in。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="问题">
+        <div class="slide-header">
+          <div class="kicker">Problem</div>
+          <h2>问题不是“记不住”，而是上下文不可运营</h2>
+          <p>项目上下文散落在提示词、聊天、文件和人的脑子里；越到后期，agent 越像一次性进程。</p>
+        </div>
+        <div class="layout three-col">
+          <div class="panel">
+            <h3>重复解释</h3>
+            <p>架构约束、测试习惯、线上事故、用户偏好反复出现在 prompt 里。</p>
+          </div>
+          <div class="panel">
+            <h3>旧决策丢失</h3>
+            <p>“为什么这里这么写”常常需要翻 commit、issue、聊天记录，还不一定找得到。</p>
+          </div>
+          <div class="panel">
+            <h3>静态规则过期</h3>
+            <p><span class="mono">AGENTS.md</span> 或 <span class="mono">CLAUDE.md</span> 适合硬规则，不适合持续吸收每次会话里的事实。</p>
+          </div>
+        </div>
+        <div class="footer-line"><span>叙事起点</span><span>上下文需要生命周期，而不是更长 prompt</span></div>
+        <aside class="speaker-note">
+          <p>这里强调 pain：agent 的问题不是完全没有记忆，很多工具已经有静态规则文件或聊天历史。真正的问题是这些上下文没有运营能力：没有来源、没有过期、没有检索策略、也不能跨工具复用。agentmemory 要解决的是“把上下文当成系统状态管理”，而不是单纯把一堆文本塞回窗口。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="一句话模型">
+        <div class="slide-header">
+          <div class="kicker">Mental Model</div>
+          <h2>一句话模型：Capture → Index → Recall → Coordinate</h2>
+          <p>agentmemory 是一个本地记忆服务：自动观察 agent 会话，建索引，在下一次需要时以受控预算返回上下文。</p>
+        </div>
+        <div class="layout">
+          <div class="flow">
+            <div class="flow-step">
+              <span class="num">01</span>
+              <h3>Capture</h3>
+              <p>hooks、REST、MCP 把 prompts、工具调用、提交信息和显式记忆写入同一条链路。</p>
+            </div>
+            <div class="flow-step">
+              <span class="num">02</span>
+              <h3>Index</h3>
+              <p>BM25、向量和关系图围绕 observation、memory、lesson 建可检索结构。</p>
+            </div>
+            <div class="flow-step">
+              <span class="num">03</span>
+              <h3>Recall</h3>
+              <p>根据问题、文件、会话、commit 或 token budget 返回压缩后的证据。</p>
+            </div>
+            <div class="flow-step">
+              <span class="num">04</span>
+              <h3>Coordinate</h3>
+              <p>actions、leases、signals、slots、handoff 支撑多 agent 和跨会话工作流。</p>
+            </div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat"><strong>53</strong><span>MCP tools<br />8 个 core 默认可见</span></div>
+            <div class="stat"><strong>128</strong><span>REST endpoints<br />端口 3111</span></div>
+            <div class="stat"><strong>6</strong><span>MCP resources<br />另有 3 prompts</span></div>
+            <div class="stat"><strong>15</strong><span>skills<br />8 action + 7 reference</span></div>
+          </div>
+        </div>
+        <div class="footer-line"><span>package.json: 0.9.27</span><span>README / src/mcp/tools-registry.ts / src/triggers/api.ts</span></div>
+        <aside class="speaker-note">
+          <p>这页给听众一个能贯穿全场的四段模型。Capture 是入口，Index 是可找回，Recall 是让 agent 用得上，Coordinate 是系统开始支持多 agent 后的能力面。数字来自当前仓库：53 个 MCP tool、128 个 REST endpoint、6 个 resource、3 个 prompt、15 个 skill。后面每一页都可以落回这个模型。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="iii 心智模型">
+        <div class="slide-header">
+          <div class="kicker">Engine</div>
+          <h2>iii 心智模型：Worker / Function / Trigger</h2>
+          <p>agentmemory 不绕过 iii-engine；新能力就是注册函数、注册触发器，再通过 <span class="mono">sdk.trigger()</span> 组合。</p>
+        </div>
+        <div class="layout">
+          <div class="primitive-grid">
+            <div class="primitive">
+              <div class="glyph">W</div>
+              <h3>Worker</h3>
+              <p>agentmemory 进程启动后连接 iii-engine，注册所有 <span class="mono">mem::*</span>、<span class="mono">api::*</span>、<span class="mono">mcp::*</span> 函数。</p>
+            </div>
+            <div class="primitive">
+              <div class="glyph">F</div>
+              <h3>Function</h3>
+              <p>业务能力以函数暴露，例如 <span class="mono">mem::observe</span>、<span class="mono">mem::smart-search</span>、<span class="mono">mem::remember</span>。</p>
+            </div>
+            <div class="primitive">
+              <div class="glyph">T</div>
+              <h3>Trigger</h3>
+              <p>HTTP、stream、cron、event 把外部请求映射到函数，统一进入 iii 的状态和调用模型。</p>
+            </div>
+          </div>
+          <div class="formula">
+            sdk.registerFunction("mem::observe", handler)<br />
+            sdk.registerTrigger({ type: "http", function_id: "api::observe" })<br />
+            await sdk.trigger({ function_id: "mem::smart-search", payload })
+          </div>
+        </div>
+        <div class="footer-line"><span>架构规则</span><span>所有能力通过 registerFunction / registerTrigger / sdk.trigger()</span></div>
+        <aside class="speaker-note">
+          <p>这一页只讲三个原语。Worker 是进程，Function 是能力，Trigger 是入口。重要的是一致性：agentmemory 不是 REST 里一套、MCP 里一套、SQLite 又一套，最终都会落到 iii 的函数调用和 StateModule。这样做的好处是可观测、可组合、可跨入口复用，也解释了为什么 AGENTS 里强调不要绕过 iii-engine。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="运行时架构">
+        <div class="slide-header">
+          <div class="kicker">Runtime</div>
+          <h2>运行时架构：入口很多，状态中心只有一个</h2>
+          <p>hooks、MCP、REST、viewer 和 iii console 看到的是同一套 worker 函数与状态。</p>
+        </div>
+        <div class="layout">
+          <div class="arch">
+            <div class="arch-box"><strong>Agent hooks</strong><span>prompt / tool / compact / session</span></div>
+            <div class="arch-join">HTTP</div>
+            <div class="arch-join">MCP</div>
+            <div class="arch-box"><strong>Agents</strong><span>Claude Code / Codex / OpenCode / others</span></div>
+            <div class="arch-box"><strong>REST :3111</strong><span>128 endpoints, health, viewer proxy</span></div>
+            <div class="arch-box arch-core"><strong>agentmemory worker</strong><span>registerFunction + sdk.trigger</span></div>
+            <div class="arch-box"><strong>MCP server</strong><span>53 tools, resources, prompts</span></div>
+            <div class="arch-box"><strong>Streams :3112</strong><span>live observation feed</span></div>
+            <div class="arch-join">iii-engine :49134</div>
+            <div class="arch-join">StateModule</div>
+            <div class="arch-box"><strong>Viewer :3113</strong><span>sessions, memories, graph, replay</span></div>
+            <div class="arch-box"><strong>KV / SQLite</strong><span>./data/state_store.db via iii-engine</span></div>
+            <div class="arch-box"><strong>Indexes</strong><span>BM25, vector, graph, persisted index</span></div>
+            <div class="arch-box"><strong>iii console</strong><span>traces, states, workers</span></div>
+          </div>
+        </div>
+        <div class="footer-line"><span>默认端口</span><span>REST 3111 / streams 3112 / viewer 3113 / engine 49134</span></div>
+        <aside class="speaker-note">
+          <p>架构图的重点是“入口多、状态一”。hooks 负责自动捕获，MCP 是 agent 最常用的工具面，REST 是通用协议和 viewer API，viewer 展示记忆产品视角，iii console 展示 engine 视角。底层状态不是手写 SQLite 直连，而是 iii-engine 的 StateModule，默认文件型 SQLite 在 data/state_store.db。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="自动捕获">
+        <div class="slide-header">
+          <div class="kicker">Capture Path</div>
+          <h2>自动捕获链路：观察会话，但不拖慢 agent</h2>
+          <p>Claude Code 插件注册 12 个 lifecycle hooks；上下文注入类 hooks 等待结果，遥测类 hooks 默认 fire-and-forget。</p>
+        </div>
+        <div class="layout two-col">
+          <div class="panel">
+            <div class="hook-lanes">
+              <div class="lane-label">会话边界</div>
+              <div class="lane"><span class="hook capture">SessionStart</span><span class="hook capture">SessionEnd</span><span class="hook capture">Stop</span></div>
+              <div class="lane-label">用户意图</div>
+              <div class="lane"><span class="hook capture">UserPromptSubmit</span><span class="hook capture">Notification</span><span class="hook capture">TaskCompleted</span></div>
+              <div class="lane-label">工具轨迹</div>
+              <div class="lane"><span class="hook inject">PreToolUse</span><span class="hook capture">PostToolUse</span><span class="hook capture">PostToolUseFailure</span></div>
+              <div class="lane-label">上下文边界</div>
+              <div class="lane"><span class="hook inject">PreCompact</span><span class="hook capture">SubagentStart</span><span class="hook capture">SubagentStop</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>两个执行策略</h3>
+            <div class="list">
+              <div class="bullet">需要把上下文写回 stdout 的 hooks 使用 <span class="mono">await fetch(... AbortSignal.timeout)</span>。</div>
+              <div class="bullet">只做捕获的 hooks 使用 fire-and-forget，并用短 <span class="mono">setTimeout(...).unref()</span> 保证进程退出。</div>
+              <div class="bullet">默认捕获不需要 LLM；自动压缩和上下文注入分别通过环境变量 opt-in。</div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>plugin/hooks/hooks.json</span><span>src/hooks/* / agentmemory-hooks skill</span></div>
+        <aside class="speaker-note">
+          <p>这页讲设计取舍。agent 不能因为记忆系统慢就卡住下一步，所以遥测类 hook 要把请求发出去后尽快退出。只有 SessionStart、PreToolUse、PreCompact 这类需要把回忆内容注入 stdout 的脚本才等待响应，而且必须有 timeout。这样默认路径是轻量捕获，昂贵的 LLM 摘要和自动注入都是显式开启。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="mem::observe">
+        <div class="slide-header">
+          <div class="kicker">Code Path</div>
+          <h2><span class="mono">mem::observe</span> 路径级讲解</h2>
+          <p>这一条路径把 hook payload 变成可检索、可回放、可治理的 observation。</p>
+        </div>
+        <div class="layout wide-narrow">
+          <div class="path-stack">
+            <div class="path-row"><div class="index">1</div><div><strong>校验 payload</strong><span>要求 sessionId、hookType、timestamp；系统边界先失败。</span></div><code>registerObserveFunction</code></div>
+            <div class="path-row"><div class="index">2</div><div><strong>去重与隐私过滤</strong><span>DedupMap 基于 session/tool/input；stripPrivateData 先处理原始数据。</span></div><code>DedupMap / privacy</code></div>
+            <div class="path-row"><div class="index">3</div><div><strong>写入 KV</strong><span>按 session 分桶写 observation；必要时隐式创建 session。</span></div><code>KV.observations</code></div>
+            <div class="path-row"><div class="index">4</div><div><strong>推送 stream</strong><span>写 session stream，同时向 viewer group 发送 live event。</span></div><code>STREAM.viewerGroup</code></div>
+            <div class="path-row"><div class="index">5</div><div><strong>压缩与索引</strong><span>默认 synthetic compression；可 opt-in LLM compression；随后更新 BM25 和 vector。</span></div><code>buildSyntheticCompression</code></div>
+          </div>
+          <div class="panel">
+            <h3>默认路径的含义</h3>
+            <p>不设置 <span class="mono">AGENTMEMORY_AUTO_COMPRESS</span> 时，每条观察仍会生成 zero-LLM 的压缩文本，因此 recall 和 BM25 可以工作。</p>
+            <p>图像、vision embedding、LLM summary、context injection 都是独立开关，不是基础捕获的前置条件。</p>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/functions/observe.ts</span><span>src/functions/compress-synthetic.ts / src/functions/search.ts</span></div>
+        <aside class="speaker-note">
+          <p>这页是第一个源码路径，但不逐行讲。核心顺序是：验证、去重、脱敏、写 KV、推送 stream、更新 session，再选择压缩策略。默认 synthetic compression 很关键：即使没有 API key，也不会只存一坨不可检索 raw JSON，而是生成标题和叙述用于 BM25 与向量索引。这样产品默认可用，成本能力另行开启。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="检索链路">
+        <div class="slide-header">
+          <div class="kicker">Recall Path</div>
+          <h2>检索链路：BM25 + Vector + Graph + RRF</h2>
+          <p><span class="mono">mem::smart-search</span> 是常用入口：多路召回、加权融合、按 session 去集中化，再按 token budget 暴露细节。</p>
+        </div>
+        <div class="layout">
+          <div class="retrieval">
+            <div class="retrieval-source">
+              <div class="score">keyword</div>
+              <h3>BM25</h3>
+              <p>文件名、函数名、错误消息、显式术语命中稳定，默认无需 API key。</p>
+            </div>
+            <div class="retrieval-source">
+              <div class="score">semantic</div>
+              <h3>Vector</h3>
+              <p>本地默认 embedding 支撑改写、近义、跨表达检索；可持久化并做维度校验。</p>
+            </div>
+            <div class="retrieval-source">
+              <div class="score">relations</div>
+              <h3>Graph</h3>
+              <p>可选关系图扩展概念与实体，适合跨 session 的关联发现。</p>
+            </div>
+          </div>
+          <div class="layout two-col">
+            <div class="formula">
+              combinedScore =<br />
+              bm25Weight × 1/(60 + bm25Rank)<br />
+              + vectorWeight × 1/(60 + vectorRank)<br />
+              + graphWeight × 1/(60 + graphRank)
+            </div>
+            <div class="panel">
+              <h3>返回不是越多越好</h3>
+              <div class="list">
+                <div class="bullet">过量召回后按 agent scope 和 project 过滤。</div>
+                <div class="bullet">按 session 做 diversification，避免一个会话淹没结果。</div>
+                <div class="bullet"><span class="mono">memory_recall</span> 支持 <span class="mono">token_budget</span>，展开用 <span class="mono">expandIds</span> 渐进披露。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/state/hybrid-search.ts</span><span>src/functions/smart-search.ts / src/mcp/server.ts</span></div>
+        <aside class="speaker-note">
+          <p>检索页解释为什么不是单一向量库。代码里 HybridSearch 用 RRF 形式融合 BM25、vector 和 graph rank，默认权重来自配置。然后做 session diversification，减少同一会话刷屏。MCP 层的 memory_smart_search 先返回 compact 结果，需要更多上下文时再 expandIds；memory_recall 面向直接注入，支持 token_budget。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="使用面">
+        <div class="slide-header">
+          <div class="kicker">Surfaces</div>
+          <h2>使用面：不是只有一个搜索框</h2>
+          <p>agent 常用 MCP，脚本和外部系统用 REST，操作者用 viewer，知识复用用 skills。</p>
+        </div>
+        <div class="layout tools-grid">
+          <div class="panel">
+            <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+              <div class="stat"><strong>53</strong><span>MCP tools</span></div>
+              <div class="stat"><strong>128</strong><span>REST endpoints</span></div>
+              <div class="stat"><strong>6</strong><span>resources</span></div>
+              <div class="stat"><strong>3</strong><span>prompts</span></div>
+            </div>
+            <p class="small" style="margin-top:18px;">默认只需要记住少数高频动作，完整工具面留给高级治理和协作流程。</p>
+          </div>
+          <div class="tool-list">
+            <div class="tool-pill"><code>memory_recall</code><span>查过去的决策、文件修改、问题处理方式。</span></div>
+            <div class="tool-pill"><code>memory_save</code><span>显式保存重要洞察、约定、偏好。</span></div>
+            <div class="tool-pill"><code>memory_smart_search</code><span>混合检索 + compact/expand 渐进披露。</span></div>
+            <div class="tool-pill"><code>memory_sessions</code><span>列出近期会话和观察数量，用于 handoff。</span></div>
+            <div class="tool-pill"><code>memory_commit_lookup</code><span>从 commit SHA 反查产生它的 agent session。</span></div>
+            <div class="tool-pill"><code>memory_verify</code><span>追踪 memory 或 observation 的来源链。</span></div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/mcp/tools-registry.ts</span><span>plugin/skills/agentmemory-mcp-tools/REFERENCE.md</span></div>
+        <aside class="speaker-note">
+          <p>这一页把能力面收束成实际使用。虽然有 53 个工具，但分享里只需要讲最常用的四个：recall、save、smart_search、sessions。commit_lookup 和 verify 作为治理例子：它们说明记忆不是黑箱文本，而是可以追溯到会话、commit、observation 的证据链。REST 是等价入口，viewer 是人看的入口。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="生命周期与治理">
+        <div class="slide-header">
+          <div class="kicker">Lifecycle</div>
+          <h2>生命周期与治理：让记忆变少、变准、可删除</h2>
+          <p>长期有用的不是“永远保存”，而是捕获、压缩、合并、验证、遗忘的闭环。</p>
+        </div>
+        <div class="layout" style="grid-template-rows: 1fr auto;">
+          <div class="governance">
+            <div class="panel">
+              <h3>整理</h3>
+              <p><span class="mono">consolidate</span> 把工作记忆、episodic、semantic、procedural 分层；<span class="mono">lessons</span> 保存可复用经验。</p>
+            </div>
+            <div class="panel">
+              <h3>保留</h3>
+              <p><span class="mono">slots</span> 维护小而稳定的项目/全局记忆；<span class="mono">retention</span> 和 <span class="mono">auto-forget</span> 控制增长。</p>
+            </div>
+            <div class="panel">
+              <h3>治理</h3>
+              <p><span class="mono">audit</span>、<span class="mono">verify</span>、<span class="mono">governance_delete</span> 让状态变更可追踪，可解释，也可删除。</p>
+            </div>
+          </div>
+          <div class="two-col" style="display:grid; gap:14px;">
+            <div class="panel">
+              <h3>默认边界</h3>
+              <p>基础捕获与 BM25 检索不需要 LLM。LLM compression、graph extraction、context injection、vision embedding 都是配置开关。</p>
+            </div>
+            <div class="panel">
+              <h3>协作边界</h3>
+              <p>多 agent 可以通过 <span class="mono">AGENT_ID</span> 标记写入，用 <span class="mono">AGENTMEMORY_AGENT_SCOPE</span> 控制召回隔离。</p>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/functions/*</span><span>README: configuration, governance, agent scope</span></div>
+        <aside class="speaker-note">
+          <p>生命周期页强调边界和治理。记忆系统最怕两件事：无限增长和不可解释。agentmemory 的回答是分层整理、slot 化、保留策略、审计和验证。还要明确 opt-in：LLM summary 会花 token，context injection 会消耗上下文，graph extraction 也有开关。默认路径是轻量、本地、可检索。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="截图 demo">
+        <div class="slide-header">
+          <div class="kicker">Demo Without Risk</div>
+          <h2>截图 demo：不依赖现场 live 操作，也能讲完整</h2>
+          <p>本机 health 已验证 healthy；viewer、MCP 列表和 iii console 截图组成 2 分钟演示路径。</p>
+        </div>
+        <div class="layout demo-grid">
+          <div class="panel" style="display:grid; gap:12px;">
+            <div class="terminal">
+              <span class="prompt">$</span> curl http://localhost:3111/agentmemory/health<br />
+              {<br />
+              &nbsp;&nbsp;<span class="key">"status"</span>: <span class="ok">"healthy"</span>,<br />
+              &nbsp;&nbsp;<span class="key">"version"</span>: "0.9.27",<br />
+              &nbsp;&nbsp;<span class="key">"viewerPort"</span>: 3113,<br />
+              &nbsp;&nbsp;<span class="key">"viewerSkipped"</span>: false,<br />
+              &nbsp;&nbsp;<span class="key">"connectionState"</span>: "connected"<br />
+              }
+            </div>
+            <div class="terminal">
+              <span class="prompt">$</span> MCP tools<br />
+              memory_recall · memory_save · memory_smart_search · memory_sessions<br />
+              memory_verify · memory_commit_lookup · memory_lesson_save · ...
+            </div>
+          </div>
+          <div class="screenshot-grid">
+            <div class="shot"><span>iii console / workers</span><img src="assets/iii-console/workers.png" alt="iii console workers screenshot" /></div>
+            <div class="shot"><span>iii console / traces</span><img src="assets/iii-console/traces-waterfall.png" alt="iii console traces screenshot" /></div>
+            <div class="shot"><span>iii console / state</span><img src="assets/iii-console/states.png" alt="iii console state screenshot" /></div>
+            <div class="shot"><span>viewer :3113</span><div style="padding:14px;display:grid;gap:10px;align-content:center;background:#111416;">
+              <div class="tag">Sessions</div><div class="tag">Memories</div><div class="tag">Graph</div><div class="tag">Replay</div>
+            </div></div>
+          </div>
+        </div>
+        <div class="footer-line"><span>local health checked 2026-07-02</span><span>assets/iii-console/*.png</span></div>
+        <aside class="speaker-note">
+          <p>现场 demo 最容易被网络、端口和登录状态干扰，所以这里用截图兜底。讲法是：先看 health，证明 daemon、viewer、engine 都连上；再看 MCP 列表，说明 agent 能调哪些工具；然后切到 viewer，讲 session、memory、graph、replay；最后用 iii console 截图解释底层函数、状态和 trace。即使不现场操作，也能完整展示系统面。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="证据与边界">
+        <div class="slide-header">
+          <div class="kicker">Evidence</div>
+          <h2>证据与边界：只讲 retrieval，不夸大成端到端 QA</h2>
+          <p>benchmark 能证明检索组件，但不能直接证明 agent 一定会做对任务。</p>
+        </div>
+        <div class="layout evidence-grid">
+          <div class="panel">
+            <table>
+              <thead><tr><th>评测</th><th>结果</th><th>含义</th></tr></thead>
+              <tbody>
+                <tr><td>LongMemEval-S</td><td><strong>R@5 95.2%</strong><br /><span class="muted">R@10 98.6%, MRR 88.2%</span></td><td>500 questions，约 48 sessions/question；retrieval-only。</td></tr>
+                <tr><td>coding-agent-life-v1</td><td><strong>R@5 1.000</strong><br /><span class="muted">15 / 15 top-5 hit</span></td><td>小型 agent 工作流语料，主要验证 temporal/multi-session recall。</td></tr>
+                <tr><td>Token savings</td><td><strong>~92%</strong></td><td>与把全部历史塞进上下文相比，top-k recall 只返回所需证据。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <h3>边界说明</h3>
+            <div class="list">
+              <div class="bullet">R@5 是 gold session 是否进 top-5，不是最终答案正确率。</div>
+              <div class="bullet">LongMemEval 官方 QA 还包括 reader 和 judge；这里不声称 leaderboard 分数。</div>
+              <div class="bullet">上下文注入能帮 agent，但仍需要 agent 读懂并正确执行。</div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>benchmark/LONGMEMEVAL.md</span><span>docs/benchmarks/2026-05-20-coding-agent-life-v1.md / benchmark/REAL-EMBEDDINGS.md</span></div>
+        <aside class="speaker-note">
+          <p>这页必须讲克制。LongMemEval-S 的 95.2% 是 retrieval recall：gold session 是否被找进 top 5。coding-agent-life 的 1.000 也是 retrieval 指标，而且语料很小。它们证明检索能力和 token 节省，但不能直接推出“agent 端到端一定答对”。这反而增强可信度：我们知道系统边界在哪里。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="工作流建议">
+        <div class="slide-header">
+          <div class="kicker">Workflow</div>
+          <h2>落到我们的工作流：三条实践建议</h2>
+          <p>让记忆成为工程习惯，而不是偶尔想起来才用的搜索框。</p>
+        </div>
+        <div class="layout practice">
+          <div class="panel">
+            <div class="big-num">01</div>
+            <h3>开工先 recall</h3>
+            <p>碰到架构、历史决策、跨文件修改、测试习惯时，先查过去会话，不要让 agent 重新猜。</p>
+            <div class="code-line">memory_recall(query)</div>
+          </div>
+          <div class="panel">
+            <div class="big-num">02</div>
+            <h3>重要结论要 remember</h3>
+            <p>设计选择、迁移坑、用户偏好、复盘结论值得显式保存，后续自动捕获再补充证据。</p>
+            <div class="code-line">memory_save(content, concepts)</div>
+          </div>
+          <div class="panel">
+            <div class="big-num">03</div>
+            <h3>交接看 session 与 commit</h3>
+            <p>新会话用 handoff 接上下文；追溯代码用 commit-context 找回当时 agent 的工作轨迹。</p>
+            <div class="code-line">handoff / commit-context</div>
+          </div>
+        </div>
+        <div class="footer-line"><span>结尾</span><span>Capture → Index → Recall → Coordinate</span></div>
+        <aside class="speaker-note">
+          <p>结尾回到可执行建议。第一，开工先 recall，特别是遇到历史和跨文件问题。第二，重要结论要显式 remember，因为自动捕获是材料，显式记忆是判断。第三，交接和追溯用 session、handoff、commit-context，把“为什么这样写”从口头知识变成可查询证据。最后重复四段模型收束：Capture、Index、Recall、Coordinate。</p>
+        </aside>
+      </section>
+    </div>
+  </main>
+
+  <nav class="controls" aria-label="slide controls">
+    <button id="prev" type="button" aria-label="上一页">‹</button>
+    <div class="page-indicator" id="pageIndicator">1 / 13</div>
+    <button id="next" type="button" aria-label="下一页">›</button>
+    <button id="notesToggle" type="button" aria-label="备注">N</button>
+    <button id="fullToggle" type="button" aria-label="全屏">F</button>
+    <button id="printButton" type="button" aria-label="打印">P</button>
+  </nav>
+  <aside class="notes-panel" id="notesPanel" aria-live="polite">
+    <h3 id="notesTitle">备注</h3>
+    <div id="notesBody"></div>
+  </aside>
+
+  <script>
+    (() => {
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const pageIndicator = document.getElementById("pageIndicator");
+      const notesToggle = document.getElementById("notesToggle");
+      const notesTitle = document.getElementById("notesTitle");
+      const notesBody = document.getElementById("notesBody");
+      let index = 0;
+
+      function render() {
+        slides.forEach((slide, i) => slide.classList.toggle("active", i === index));
+        pageIndicator.textContent = `${index + 1} / ${slides.length}`;
+        const title = slides[index].dataset.title || `Slide ${index + 1}`;
+        const note = slides[index].querySelector(".speaker-note");
+        notesTitle.textContent = `${index + 1}. ${title}`;
+        notesBody.innerHTML = note ? note.innerHTML : "";
+        notesToggle.classList.toggle("active", document.body.classList.contains("notes-open"));
+        document.title = `${title} - agentmemory talk`;
+      }
+
+      function go(nextIndex) {
+        index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+        render();
+      }
+
+      function toggleNotes() {
+        document.body.classList.toggle("notes-open");
+        render();
+      }
+
+      async function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          await document.exitFullscreen().catch(() => {});
+        }
+      }
+
+      document.getElementById("prev").addEventListener("click", () => go(index - 1));
+      document.getElementById("next").addEventListener("click", () => go(index + 1));
+      notesToggle.addEventListener("click", toggleNotes);
+      document.getElementById("fullToggle").addEventListener("click", toggleFullScreen);
+      document.getElementById("printButton").addEventListener("click", () => window.print());
+
+      window.addEventListener("keydown", (event) => {
+        const key = event.key;
+        if (key === "ArrowRight" || key === "PageDown" || key === " ") {
+          event.preventDefault();
+          go(index + 1);
+        } else if (key === "ArrowLeft" || key === "PageUp") {
+          event.preventDefault();
+          go(index - 1);
+        } else if (key === "Home") {
+          event.preventDefault();
+          go(0);
+        } else if (key === "End") {
+          event.preventDefault();
+          go(slides.length - 1);
+        } else if (key.toLowerCase() === "n" || key.toLowerCase() === "s") {
+          event.preventDefault();
+          toggleNotes();
+        } else if (key.toLowerCase() === "f") {
+          event.preventDefault();
+          toggleFullScreen();
+        } else if (key === "Escape" && document.body.classList.contains("notes-open")) {
+          document.body.classList.remove("notes-open");
+          render();
+        }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

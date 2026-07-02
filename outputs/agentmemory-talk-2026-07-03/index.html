@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>agentmemory: 让 coding agent 记住项目上下文</title>
+  <title>agentmemory: 从事件流到长期知识</title>
   <style>
     :root {
       --bg: #090a0b;
@@ -660,6 +660,231 @@
     }
     .practice p { font-size: 17px; }
 
+    .lifecycle-flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+    .lifecycle-step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111416;
+      padding: 15px 13px;
+      min-height: 176px;
+      display: grid;
+      align-content: start;
+      gap: 9px;
+    }
+    .lifecycle-step .num {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .lifecycle-step h3 { font-size: 20px; }
+    .lifecycle-step p { font-size: 14px; line-height: 1.42; }
+
+    .do-dont {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      min-height: 0;
+    }
+
+    .schema-map {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) 72px minmax(0, 1.25fr);
+      gap: 14px;
+      align-items: center;
+      min-height: 0;
+    }
+    .schema-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111416;
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-height: 0;
+    }
+    .schema-card h3 {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .schema-card h3 code {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .schema-arrow {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 30px;
+      text-align: center;
+    }
+    .field-list {
+      display: grid;
+      gap: 8px;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 128px 1fr;
+      gap: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line-soft);
+      min-width: 0;
+    }
+    .field-row code {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+    .field-row span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.34;
+    }
+
+    .index-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .compact-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      min-height: 0;
+    }
+    .compact-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111416;
+      padding: 14px;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      min-height: 150px;
+    }
+    .compact-card code {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+    .compact-card strong { font-size: 17px; }
+    .compact-card span { color: var(--muted); font-size: 13px; line-height: 1.34; }
+
+    .trace-grid {
+      display: grid;
+      grid-template-columns: 1fr 92px 1fr 92px 1fr;
+      gap: 12px;
+      align-items: center;
+      min-height: 0;
+    }
+    .trace-node {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111416;
+      padding: 18px;
+      min-height: 206px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+    .trace-node code {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+    .trace-node p { font-size: 16px; line-height: 1.42; }
+    .trace-arrow {
+      color: var(--faint);
+      font-family: var(--mono);
+      font-size: 34px;
+      text-align: center;
+    }
+
+    .io-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr 0.9fr;
+      gap: 14px;
+      align-items: stretch;
+      min-height: 0;
+    }
+    .io-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111416;
+      padding: 16px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+      min-height: 0;
+    }
+    .io-card h3 code {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .io-card p { font-size: 15px; line-height: 1.4; }
+    .io-card .code-line { white-space: normal; font-size: 13px; }
+
+    .cost-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .cost-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111416;
+      padding: 18px;
+      min-height: 230px;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+    .cost-card .label {
+      font-family: var(--mono);
+      color: var(--amber);
+      font-size: 13px;
+    }
+    .cost-card p { font-size: 16px; line-height: 1.42; }
+
+    .layer-stack {
+      display: grid;
+      gap: 10px;
+    }
+    .layer-row {
+      display: grid;
+      grid-template-columns: 190px 1fr 180px;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      background: #111416;
+      padding: 13px 14px;
+      min-width: 0;
+    }
+    .layer-row strong { color: var(--ink); font-size: 17px; }
+    .layer-row span { color: var(--muted); font-size: 14px; line-height: 1.35; }
+    .layer-row code {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 13px;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
     .footer-line {
       position: absolute;
       left: 54px;
@@ -749,9 +974,12 @@
       h1 { font-size: 46px; }
       h2 { font-size: 32px; }
       p, .bullet { font-size: 17px; }
-      .two-col, .three-col, .wide-narrow, .narrow-wide, .tools-grid, .demo-grid, .evidence-grid, .practice {
+      .two-col, .three-col, .wide-narrow, .narrow-wide, .tools-grid, .demo-grid, .evidence-grid, .practice, .lifecycle-flow, .do-dont, .schema-map, .index-grid, .compact-grid, .trace-grid, .io-grid, .cost-grid {
         grid-template-columns: 1fr;
       }
+      .trace-arrow { display: none; }
+      .schema-arrow { display: none; }
+      .layer-row { grid-template-columns: 1fr; }
       .flow { grid-template-columns: 1fr 1fr; }
       .arch { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
       .arch-core { grid-column: span 2; grid-row: auto; }
@@ -785,373 +1013,340 @@
         <div class="cover-shade"></div>
         <div class="cover-content">
           <div class="brand-row"><img src="assets/logo.svg" alt="agentmemory logo" /> agentmemory / 2026-07-03</div>
-          <h1>agentmemory: 让 coding agent 记住项目上下文</h1>
-          <p class="subtitle">从自动捕获、混合检索到跨 agent 协作，把“记忆”变成可运营的项目基础设施。</p>
+          <h1>agentmemory</h1>
+          <p class="subtitle">从事件流到长期知识：agentmemory 的记录、索引、检索与总结机制</p>
           <div class="meta-line">
+            <span class="tag">memory lifecycle</span>
+            <span class="tag">retrieval evaluation</span>
             <span class="tag">v0.9.27</span>
-            <span class="tag">iii-engine primitives</span>
-            <span class="tag">MCP / REST / Viewer</span>
           </div>
         </div>
         <aside class="speaker-note">
-          <p>开场先定调：这不是一个“多存一点聊天记录”的项目，而是 coding agent 的上下文运行时。不逐行读源码，只讲路径级源码：哪些入口捕获信息，信息怎么进入索引，agent 后续怎么通过 MCP、REST 或 viewer 找回来。最后会明确边界，哪些能力默认零 LLM，哪些是 opt-in。</p>
+          <p>开场先把叙事从“工具集合”切到“记忆生命周期”。今天不把重点放在 MCP、REST 或 viewer 的界面数量，而是解释一个 coding agent 的事件流如何变成长期知识：先记录什么，再压缩成可索引单元，之后如何融合检索，什么时候总结和整理，最后用 retrieval benchmark 说明效果和边界。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="问题">
+      <section class="slide rows" data-title="问题定义">
         <div class="slide-header">
           <div class="kicker">Problem</div>
-          <h2>问题不是“记不住”，而是上下文不可运营</h2>
-          <p>项目上下文散落在提示词、聊天、文件和人的脑子里；越到后期，agent 越像一次性进程。</p>
+          <h2>问题不是上下文短，而是经验不可积累</h2>
+          <p>把更多历史塞进 prompt 不能解决长期记忆的三个核心约束：不可检索、不可验证、不可演化。</p>
         </div>
         <div class="layout three-col">
           <div class="panel">
-            <h3>重复解释</h3>
-            <p>架构约束、测试习惯、线上事故、用户偏好反复出现在 prompt 里。</p>
+            <h3>不可积累</h3>
+            <p>一次会话里的尝试、错误、决策和文件变更，默认不会沉淀为下一次可复用的知识。</p>
           </div>
           <div class="panel">
-            <h3>旧决策丢失</h3>
-            <p>“为什么这里这么写”常常需要翻 commit、issue、聊天记录，还不一定找得到。</p>
+            <h3>不可检索</h3>
+            <p>旧上下文散落在聊天、终端输出、commit 和文件里；agent 只能重新猜，不能按证据找回。</p>
           </div>
           <div class="panel">
-            <h3>静态规则过期</h3>
-            <p><span class="mono">AGENTS.md</span> 或 <span class="mono">CLAUDE.md</span> 适合硬规则，不适合持续吸收每次会话里的事实。</p>
+            <h3>不可验证</h3>
+            <p>没有 observation id、session id、来源路径和删除记录，记忆就会变成不可审计的软提示。</p>
           </div>
         </div>
-        <div class="footer-line"><span>叙事起点</span><span>上下文需要生命周期，而不是更长 prompt</span></div>
+        <div class="footer-line"><span>问题定义</span><span>上下文需要生命周期，而不是更长 prompt</span></div>
         <aside class="speaker-note">
-          <p>这里强调 pain：agent 的问题不是完全没有记忆，很多工具已经有静态规则文件或聊天历史。真正的问题是这些上下文没有运营能力：没有来源、没有过期、没有检索策略、也不能跨工具复用。agentmemory 要解决的是“把上下文当成系统状态管理”，而不是单纯把一堆文本塞回窗口。</p>
+          <p>这一页先建立科研听众熟悉的问题形式：我们不是在问“窗口能不能更长”，而是在问经验是否能成为可查询、可验证、可更新的状态。长上下文只解决短期容量；长期 agent 需要的是从事件到索引、从索引到检索、从检索到组织的闭环。后面的每个机制都对应这里的一个约束。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="一句话模型">
+      <section class="slide rows" data-title="生命周期模型">
         <div class="slide-header">
-          <div class="kicker">Mental Model</div>
-          <h2>一句话模型：Capture → Index → Recall → Coordinate</h2>
-          <p>agentmemory 是一个本地记忆服务：自动观察 agent 会话，建索引，在下一次需要时以受控预算返回上下文。</p>
+          <div class="kicker">Lifecycle Model</div>
+          <h2>Capture → Compress → Index → Retrieve → Summarize → Consolidate</h2>
+          <p>agentmemory 把“记忆”拆成可实现、可测量、可治理的六个阶段。</p>
         </div>
         <div class="layout">
-          <div class="flow">
-            <div class="flow-step">
-              <span class="num">01</span>
-              <h3>Capture</h3>
-              <p>hooks、REST、MCP 把 prompts、工具调用、提交信息和显式记忆写入同一条链路。</p>
-            </div>
-            <div class="flow-step">
-              <span class="num">02</span>
-              <h3>Index</h3>
-              <p>BM25、向量和关系图围绕 observation、memory、lesson 建可检索结构。</p>
-            </div>
-            <div class="flow-step">
-              <span class="num">03</span>
-              <h3>Recall</h3>
-              <p>根据问题、文件、会话、commit 或 token budget 返回压缩后的证据。</p>
-            </div>
-            <div class="flow-step">
-              <span class="num">04</span>
-              <h3>Coordinate</h3>
-              <p>actions、leases、signals、slots、handoff 支撑多 agent 和跨会话工作流。</p>
-            </div>
+          <div class="lifecycle-flow">
+            <div class="lifecycle-step"><span class="num">01</span><h3>Capture</h3><p>从 prompt、工具调用、错误、文件变更和显式保存中形成事件流。</p></div>
+            <div class="lifecycle-step"><span class="num">02</span><h3>Compress</h3><p>把 raw event 转成标题、叙述、概念、文件和置信度。</p></div>
+            <div class="lifecycle-step"><span class="num">03</span><h3>Index</h3><p>对同一观察建立 keyword、semantic 和 relation 入口。</p></div>
+            <div class="lifecycle-step"><span class="num">04</span><h3>Retrieve</h3><p>按问题融合召回，控制 session 多样性和 token budget。</p></div>
+            <div class="lifecycle-step"><span class="num">05</span><h3>Summarize</h3><p>把一个 session 压成结构化摘要，保留决策和文件线索。</p></div>
+            <div class="lifecycle-step"><span class="num">06</span><h3>Consolidate</h3><p>跨观察聚合成长期 memory、lesson、slot 和治理记录。</p></div>
           </div>
-          <div class="stat-grid">
-            <div class="stat"><strong>53</strong><span>MCP tools<br />8 个 core 默认可见</span></div>
-            <div class="stat"><strong>128</strong><span>REST endpoints<br />端口 3111</span></div>
-            <div class="stat"><strong>6</strong><span>MCP resources<br />另有 3 prompts</span></div>
-            <div class="stat"><strong>15</strong><span>skills<br />8 action + 7 reference</span></div>
+          <div class="do-dont">
+            <div class="panel">
+              <h3>系统问题</h3>
+              <p>每个阶段都是一个边界：输入是什么、产物是什么、失败时怎么降级、是否需要 LLM、是否可审计。</p>
+            </div>
+            <div class="panel">
+              <h3>评测问题</h3>
+              <p>最容易先评测的是 retrieval：gold session 是否出现在 top-k。summary 和 consolidation 需要额外质量指标。</p>
+            </div>
           </div>
         </div>
-        <div class="footer-line"><span>package.json: 0.9.27</span><span>README / src/mcp/tools-registry.ts / src/triggers/api.ts</span></div>
+        <div class="footer-line"><span>mental model</span><span>capture / compression / indexing / retrieval / organization</span></div>
         <aside class="speaker-note">
-          <p>这页给听众一个能贯穿全场的四段模型。Capture 是入口，Index 是可找回，Recall 是让 agent 用得上，Coordinate 是系统开始支持多 agent 后的能力面。数字来自当前仓库：53 个 MCP tool、128 个 REST endpoint、6 个 resource、3 个 prompt、15 个 skill。后面每一页都可以落回这个模型。</p>
+          <p>这页给出全场主线。六个阶段不是营销词，而是系统边界：Capture 负责材料，Compress 负责把材料变成可索引单元，Index 决定检索入口，Retrieve 决定如何拿回来，Summarize 是会话级压缩，Consolidate 是长期知识组织。科研听众可以把它看成 retrieval system 加 memory lifecycle 的组合。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="iii 心智模型">
+      <section class="slide rows" data-title="记录边界">
         <div class="slide-header">
-          <div class="kicker">Engine</div>
-          <h2>iii 心智模型：Worker / Function / Trigger</h2>
-          <p>agentmemory 不绕过 iii-engine；新能力就是注册函数、注册触发器，再通过 <span class="mono">sdk.trigger()</span> 组合。</p>
+          <div class="kicker">What To Store</div>
+          <h2>什么适合记，什么不适合直接记</h2>
+          <p>长期记忆不是全量日志。好记忆应该有来源、能被检索、未来会改变 agent 行为。</p>
         </div>
-        <div class="layout">
-          <div class="primitive-grid">
-            <div class="primitive">
-              <div class="glyph">W</div>
-              <h3>Worker</h3>
-              <p>agentmemory 进程启动后连接 iii-engine，注册所有 <span class="mono">mem::*</span>、<span class="mono">api::*</span>、<span class="mono">mcp::*</span> 函数。</p>
-            </div>
-            <div class="primitive">
-              <div class="glyph">F</div>
-              <h3>Function</h3>
-              <p>业务能力以函数暴露，例如 <span class="mono">mem::observe</span>、<span class="mono">mem::smart-search</span>、<span class="mono">mem::remember</span>。</p>
-            </div>
-            <div class="primitive">
-              <div class="glyph">T</div>
-              <h3>Trigger</h3>
-              <p>HTTP、stream、cron、event 把外部请求映射到函数，统一进入 iii 的状态和调用模型。</p>
-            </div>
-          </div>
-          <div class="formula">
-            sdk.registerFunction("mem::observe", handler)<br />
-            sdk.registerTrigger({ type: "http", function_id: "api::observe" })<br />
-            await sdk.trigger({ function_id: "mem::smart-search", payload })
-          </div>
-        </div>
-        <div class="footer-line"><span>架构规则</span><span>所有能力通过 registerFunction / registerTrigger / sdk.trigger()</span></div>
-        <aside class="speaker-note">
-          <p>这一页只讲三个原语。Worker 是进程，Function 是能力，Trigger 是入口。重要的是一致性：agentmemory 不是 REST 里一套、MCP 里一套、SQLite 又一套，最终都会落到 iii 的函数调用和 StateModule。这样做的好处是可观测、可组合、可跨入口复用，也解释了为什么 AGENTS 里强调不要绕过 iii-engine。</p>
-        </aside>
-      </section>
-
-      <section class="slide rows" data-title="运行时架构">
-        <div class="slide-header">
-          <div class="kicker">Runtime</div>
-          <h2>运行时架构：入口很多，状态中心只有一个</h2>
-          <p>hooks、MCP、REST、viewer 和 iii console 看到的是同一套 worker 函数与状态。</p>
-        </div>
-        <div class="layout">
-          <div class="arch">
-            <div class="arch-box"><strong>Agent hooks</strong><span>prompt / tool / compact / session</span></div>
-            <div class="arch-join">HTTP</div>
-            <div class="arch-join">MCP</div>
-            <div class="arch-box"><strong>Agents</strong><span>Claude Code / Codex / OpenCode / others</span></div>
-            <div class="arch-box"><strong>REST :3111</strong><span>128 endpoints, health, viewer proxy</span></div>
-            <div class="arch-box arch-core"><strong>agentmemory worker</strong><span>registerFunction + sdk.trigger</span></div>
-            <div class="arch-box"><strong>MCP server</strong><span>53 tools, resources, prompts</span></div>
-            <div class="arch-box"><strong>Streams :3112</strong><span>live observation feed</span></div>
-            <div class="arch-join">iii-engine :49134</div>
-            <div class="arch-join">StateModule</div>
-            <div class="arch-box"><strong>Viewer :3113</strong><span>sessions, memories, graph, replay</span></div>
-            <div class="arch-box"><strong>KV / SQLite</strong><span>./data/state_store.db via iii-engine</span></div>
-            <div class="arch-box"><strong>Indexes</strong><span>BM25, vector, graph, persisted index</span></div>
-            <div class="arch-box"><strong>iii console</strong><span>traces, states, workers</span></div>
-          </div>
-        </div>
-        <div class="footer-line"><span>默认端口</span><span>REST 3111 / streams 3112 / viewer 3113 / engine 49134</span></div>
-        <aside class="speaker-note">
-          <p>架构图的重点是“入口多、状态一”。hooks 负责自动捕获，MCP 是 agent 最常用的工具面，REST 是通用协议和 viewer API，viewer 展示记忆产品视角，iii console 展示 engine 视角。底层状态不是手写 SQLite 直连，而是 iii-engine 的 StateModule，默认文件型 SQLite 在 data/state_store.db。</p>
-        </aside>
-      </section>
-
-      <section class="slide rows" data-title="自动捕获">
-        <div class="slide-header">
-          <div class="kicker">Capture Path</div>
-          <h2>自动捕获链路：观察会话，但不拖慢 agent</h2>
-          <p>Claude Code 插件注册 12 个 lifecycle hooks；上下文注入类 hooks 等待结果，遥测类 hooks 默认 fire-and-forget。</p>
-        </div>
-        <div class="layout two-col">
+        <div class="layout do-dont">
           <div class="panel">
-            <div class="hook-lanes">
-              <div class="lane-label">会话边界</div>
-              <div class="lane"><span class="hook capture">SessionStart</span><span class="hook capture">SessionEnd</span><span class="hook capture">Stop</span></div>
-              <div class="lane-label">用户意图</div>
-              <div class="lane"><span class="hook capture">UserPromptSubmit</span><span class="hook capture">Notification</span><span class="hook capture">TaskCompleted</span></div>
-              <div class="lane-label">工具轨迹</div>
-              <div class="lane"><span class="hook inject">PreToolUse</span><span class="hook capture">PostToolUse</span><span class="hook capture">PostToolUseFailure</span></div>
-              <div class="lane-label">上下文边界</div>
-              <div class="lane"><span class="hook inject">PreCompact</span><span class="hook capture">SubagentStart</span><span class="hook capture">SubagentStop</span></div>
-            </div>
-          </div>
-          <div class="panel">
-            <h3>两个执行策略</h3>
+            <h3>适合进入 observation</h3>
             <div class="list">
-              <div class="bullet">需要把上下文写回 stdout 的 hooks 使用 <span class="mono">await fetch(... AbortSignal.timeout)</span>。</div>
-              <div class="bullet">只做捕获的 hooks 使用 fire-and-forget，并用短 <span class="mono">setTimeout(...).unref()</span> 保证进程退出。</div>
-              <div class="bullet">默认捕获不需要 LLM；自动压缩和上下文注入分别通过环境变量 opt-in。</div>
+              <div class="bullet">用户意图和任务边界：prompt intent、目标、约束。</div>
+              <div class="bullet">工具动作和结果：命令、搜索、读写文件、失败信息。</div>
+              <div class="bullet">文件编辑和决策：改了哪里、为什么改、替代方案。</div>
+              <div class="bullet">显式记忆：偏好、架构事实、工作流、已确认的经验。</div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>不适合原样长期化</h3>
+            <div class="list">
+              <div class="bullet">secret、token、私密片段：先做隐私过滤，不把泄漏固化。</div>
+              <div class="bullet">噪声日志和长输出：除非包含错误、指标或决策证据。</div>
+              <div class="bullet">无来源偏好：没有 session 或观察来源，后续很难验证。</div>
+              <div class="bullet">临时猜测：应保留为低置信 observation，而不是强记忆。</div>
             </div>
           </div>
         </div>
-        <div class="footer-line"><span>plugin/hooks/hooks.json</span><span>src/hooks/* / agentmemory-hooks skill</span></div>
+        <div class="footer-line"><span>recording policy</span><span>src/functions/privacy.ts / src/functions/observe.ts</span></div>
         <aside class="speaker-note">
-          <p>这页讲设计取舍。agent 不能因为记忆系统慢就卡住下一步，所以遥测类 hook 要把请求发出去后尽快退出。只有 SessionStart、PreToolUse、PreCompact 这类需要把回忆内容注入 stdout 的脚本才等待响应，而且必须有 timeout。这样默认路径是轻量捕获，昂贵的 LLM 摘要和自动注入都是显式开启。</p>
+          <p>这一页解释为什么不能把所有东西都叫记忆。agentmemory 的基础材料是 observation，但长期有用的是带来源的观察：用户想做什么、工具做了什么、失败在哪里、最后做了什么决定。相反，secret、噪声日志和没有来源的偏好会污染系统。这里的标准不是“文本是否出现过”，而是它未来能否作为证据被找回和验证。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="mem::observe">
+      <section class="slide rows" data-title="Observation schema">
         <div class="slide-header">
-          <div class="kicker">Code Path</div>
-          <h2><span class="mono">mem::observe</span> 路径级讲解</h2>
-          <p>这一条路径把 hook payload 变成可检索、可回放、可治理的 observation。</p>
+          <div class="kicker">Schema Transform</div>
+          <h2>RawObservation → CompressedObservation</h2>
+          <p>压缩的目标不是写摘要文章，而是把事件变成稳定的检索单元。</p>
+        </div>
+        <div class="layout schema-map">
+          <div class="schema-card">
+            <h3>RawObservation <code>event</code></h3>
+            <div class="field-list">
+              <div class="field-row"><code>hookType</code><span>事件入口：prompt、tool、failure、compact、session。</span></div>
+              <div class="field-row"><code>toolInput</code><span>文件路径、命令、查询条件等可抽取线索。</span></div>
+              <div class="field-row"><code>toolOutput</code><span>结果、错误、截图或命令输出的原始证据。</span></div>
+              <div class="field-row"><code>raw</code><span>隐私过滤后的原始 payload，用于回放和追溯。</span></div>
+              <div class="field-row"><code>sessionId</code><span>来源边界；后续检索、总结、审计都依赖它。</span></div>
+            </div>
+          </div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-card">
+            <h3>CompressedObservation <code>index unit</code></h3>
+            <div class="field-list">
+              <div class="field-row"><code>type/title</code><span>给检索和展示稳定的类别与标题。</span></div>
+              <div class="field-row"><code>narrative</code><span>短叙述，连接输入、输出和任务语境。</span></div>
+              <div class="field-row"><code>concepts</code><span>主题标签，用于概念聚合和 consolidation。</span></div>
+              <div class="field-row"><code>files</code><span>文件级证据，用于代码库相关召回。</span></div>
+              <div class="field-row"><code>importance</code><span>决定保留、总结和长期整理时的优先级。</span></div>
+              <div class="field-row"><code>confidence</code><span>区分启发式压缩、LLM 压缩和人工确认记忆。</span></div>
+              <div class="field-row"><code>id/source</code><span>来源由 id、sessionId、timestamp、agentId 和后续 sourceObservationIds 串起来。</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/types.ts</span><span>src/functions/compress-synthetic.ts</span></div>
+        <aside class="speaker-note">
+          <p>这页讲数据结构。RawObservation 是事件证据，CompressedObservation 是检索单元。注意字段设计：type、title、narrative 让它可读，concepts 和 files 让它可聚合，importance 和 confidence 让它能被治理。source 不是一个单独魔法字段，而是由 id、sessionId、timestamp、agentId 以及长期 Memory 的 sourceObservationIds 组成证据链。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="Capture pipeline">
+        <div class="slide-header">
+          <div class="kicker">Capture Pipeline</div>
+          <h2>捕获链路：入口只是入口，关键是边界处理</h2>
+          <p>hooks 和 REST 把事件送进系统；真正重要的是验证、隐私过滤、去重、压缩和索引更新。</p>
         </div>
         <div class="layout wide-narrow">
           <div class="path-stack">
-            <div class="path-row"><div class="index">1</div><div><strong>校验 payload</strong><span>要求 sessionId、hookType、timestamp；系统边界先失败。</span></div><code>registerObserveFunction</code></div>
-            <div class="path-row"><div class="index">2</div><div><strong>去重与隐私过滤</strong><span>DedupMap 基于 session/tool/input；stripPrivateData 先处理原始数据。</span></div><code>DedupMap / privacy</code></div>
-            <div class="path-row"><div class="index">3</div><div><strong>写入 KV</strong><span>按 session 分桶写 observation；必要时隐式创建 session。</span></div><code>KV.observations</code></div>
-            <div class="path-row"><div class="index">4</div><div><strong>推送 stream</strong><span>写 session stream，同时向 viewer group 发送 live event。</span></div><code>STREAM.viewerGroup</code></div>
-            <div class="path-row"><div class="index">5</div><div><strong>压缩与索引</strong><span>默认 synthetic compression；可 opt-in LLM compression；随后更新 BM25 和 vector。</span></div><code>buildSyntheticCompression</code></div>
+            <div class="path-row"><div class="index">1</div><div><strong>validate</strong><span>要求 sessionId、hookType、timestamp；系统边界先拒绝坏输入。</span></div><code>mem::observe</code></div>
+            <div class="path-row"><div class="index">2</div><div><strong>privacy filter</strong><span>先对 raw payload 做 stripPrivateData，避免把敏感内容固化。</span></div><code>stripPrivateData</code></div>
+            <div class="path-row"><div class="index">3</div><div><strong>dedup</strong><span>基于 session、tool、input 去重，减少重复工具调用造成的污染。</span></div><code>DedupMap</code></div>
+            <div class="path-row"><div class="index">4</div><div><strong>synthetic compression</strong><span>默认 zero-LLM，把 raw event 启发式压成 title、narrative、files、type。</span></div><code>buildSyntheticCompression</code></div>
+            <div class="path-row"><div class="index">5</div><div><strong>index update</strong><span>写 KV 后更新 BM25 和 vector index，并把事件推给 viewer stream。</span></div><code>getSearchIndex().add</code></div>
           </div>
           <div class="panel">
-            <h3>默认路径的含义</h3>
-            <p>不设置 <span class="mono">AGENTMEMORY_AUTO_COMPRESS</span> 时，每条观察仍会生成 zero-LLM 的压缩文本，因此 recall 和 BM25 可以工作。</p>
-            <p>图像、vision embedding、LLM summary、context injection 都是独立开关，不是基础捕获的前置条件。</p>
+            <h3>为什么默认不用 LLM</h3>
+            <p>每个 tool event 都调用模型会把记忆系统变成成本中心。agentmemory 默认用 synthetic compression 保证可检索；需要更高质量摘要时再开启 LLM compression。</p>
+            <p class="source">补充：完整 MCP / REST 接口是系统表面，不是这条叙事主线。</p>
           </div>
         </div>
-        <div class="footer-line"><span>src/functions/observe.ts</span><span>src/functions/compress-synthetic.ts / src/functions/search.ts</span></div>
+        <div class="footer-line"><span>src/functions/observe.ts</span><span>src/functions/compress-synthetic.ts / src/hooks/*</span></div>
         <aside class="speaker-note">
-          <p>这页是第一个源码路径，但不逐行讲。核心顺序是：验证、去重、脱敏、写 KV、推送 stream、更新 session，再选择压缩策略。默认 synthetic compression 很关键：即使没有 API key，也不会只存一坨不可检索 raw JSON，而是生成标题和叙述用于 BM25 与向量索引。这样产品默认可用，成本能力另行开启。</p>
+          <p>这里把 hooks 和 REST 降级为入口，重点放在管线。mem::observe 先做输入验证，再脱敏和去重；随后写入 session 范围的 KV。默认情况下不会调 LLM，而是用 buildSyntheticCompression 构造一个低成本压缩观察，再更新搜索索引。这个设计的好处是：系统一安装就能检索，LLM 能力是质量提升而不是可用性前提。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="检索链路">
+      <section class="slide rows" data-title="Compression internals">
         <div class="slide-header">
-          <div class="kicker">Recall Path</div>
-          <h2>检索链路：BM25 + Vector + Graph + RRF</h2>
-          <p><span class="mono">mem::smart-search</span> 是常用入口：多路召回、加权融合、按 session 去集中化，再按 token budget 暴露细节。</p>
+          <div class="kicker">Compression Internals</div>
+          <h2>默认压缩是启发式：低成本、低置信、可检索</h2>
+          <p><span class="mono">buildSyntheticCompression</span> 把 raw event 变成最小可用的检索单元；LLM compression 是 opt-in 增强。</p>
+        </div>
+        <div class="layout">
+          <div class="trace-grid">
+            <div class="trace-node">
+              <code>RawObservation</code>
+              <h3>输入边界</h3>
+              <p>来自 hook payload：hookType、toolName、toolInput、toolOutput、userPrompt、sessionId、timestamp。</p>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-node">
+              <code>inferType + extractFiles</code>
+              <h3>启发式推断</h3>
+              <p>hook failure 变 error；prompt 变 conversation；工具名归一化后识别 web/search/bash/edit/read/write。</p>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-node">
+              <code>CompressedObservation</code>
+              <h3>输出约束</h3>
+              <p>title 最多 80 字符，subtitle 120，narrative 由 prompt/input/output 拼接后截到 400 字符。</p>
+            </div>
+          </div>
+          <div class="compact-grid">
+            <div class="compact-card"><code>importance = 5</code><strong>中性重要度</strong><span>启发式不知道真实价值，只提供后续整理的默认优先级。</span></div>
+            <div class="compact-card"><code>confidence = 0.3</code><strong>低置信来源</strong><span>明确区分机器启发式摘要和更高质量的人/LLM 确认记忆。</span></div>
+            <div class="compact-card"><code>concepts = []</code><strong>不伪造主题</strong><span>synthetic path 只抽能确定的 files，不硬编概念词。</span></div>
+            <div class="compact-card"><code>AGENTMEMORY_AUTO_COMPRESS=true</code><strong>LLM opt-in</strong><span>开启后 PostToolUse 进入 mem::compress，成本与工具调用频率成正比。</span></div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/functions/compress-synthetic.ts</span><span>src/functions/observe.ts / src/config.ts</span></div>
+        <aside class="speaker-note">
+          <p>这一页讲压缩内部。默认路径不是让模型解释每次工具调用，而是用 buildSyntheticCompression 做确定性转换。inferType 根据 hookType 和工具名分类；extractFiles 只从 file_path、path、file、pattern 等字段里抽文件线索；narrative 由用户 prompt、输入和输出拼接后截断到 400 字符。importance 固定 5，confidence 固定 0.3，表示这是可用但低置信的索引材料。如果用户设置 AGENTMEMORY_AUTO_COMPRESS=true，才会进入 mem::compress 的 LLM path。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="Index maintenance">
+        <div class="slide-header">
+          <div class="kicker">Index Maintenance</div>
+          <h2>索引维护：写入即更新，失败可重建</h2>
+          <p>BM25 是同步默认路径；vector 是 guarded best-effort；graph 来自长期结构和关系函数。</p>
+        </div>
+        <div class="layout">
+          <div class="compact-grid">
+            <div class="compact-card">
+              <code>observe.ts</code>
+              <strong>synthetic observation</strong>
+              <span>kv.set 到 KV.observations 后立即 getSearchIndex().add，再调用 vectorIndexAddGuarded。</span>
+            </div>
+            <div class="compact-card">
+              <code>compress.ts</code>
+              <strong>LLM compressed obs</strong>
+              <span>mem::compress 生成更丰富的 CompressedObservation，同样写 KV、BM25、vector。</span>
+            </div>
+            <div class="compact-card">
+              <code>remember.ts</code>
+              <strong>explicit Memory</strong>
+              <span>mem::remember 将 Memory 转成 observation 形状进入 BM25 和 vector。</span>
+            </div>
+            <div class="compact-card">
+              <code>rebuildIndex(kv)</code>
+              <strong>boot fallback</strong>
+              <span>索引为空时从 KV.memories 和每个 session 的 observations 重建。</span>
+            </div>
+          </div>
+          <div class="do-dont">
+            <div class="formula">
+              BM25: getSearchIndex().add(observation)<br />
+              vector: vectorIndexAddGuarded(id, sessionId, title + narrative)<br />
+              rebuild: clear BM25 + vector → batch reload from KV
+            </div>
+            <div class="panel">
+              <h3>可靠性策略</h3>
+              <p>vector 写入会检查 provider 是否存在、embedding 维度是否匹配、embed 是否抛错。失败只记录 warn 并返回 false，不阻塞 observation 或 memory 保存；BM25 和 KV 仍然可用，重启后 rebuild 会补齐可补的索引。</p>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/functions/search.ts</span><span>src/functions/observe.ts / compress.ts / remember.ts</span></div>
+        <aside class="speaker-note">
+          <p>这一页讲维护而不是只讲三路检索概念。observe、compress 和 remember 都有 live-write 路径：先写 KV，再更新 BM25，再尝试 vector。vectorIndexAddGuarded 是关键可靠性边界：没有 provider、维度不匹配、embed 网络失败都会 soft-fail，不让保存失败。rebuildIndex 是恢复路径：索引为空时从 KV.memories 和所有 session observations 重建，同时清理 stale vector。graph 不在这里强行承诺实时更新，它来自 graph 和 relation 相关函数，在检索时作为补充流使用。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="Hybrid retrieval algorithm">
+        <div class="slide-header">
+          <div class="kicker">Hybrid Retrieval</div>
+          <h2>算法核心：RRF_K=60，按可用检索流归一化</h2>
+          <p>BM25、vector、graph 先各自产生 rank，再用 reciprocal-rank fusion 合并。</p>
         </div>
         <div class="layout">
           <div class="retrieval">
             <div class="retrieval-source">
-              <div class="score">keyword</div>
-              <h3>BM25</h3>
-              <p>文件名、函数名、错误消息、显式术语命中稳定，默认无需 API key。</p>
+              <div class="score">BM25</div>
+              <h3>limit × 2</h3>
+              <p>路径、符号、错误码、命令参数走 lexical rank；没有 embedding provider 时仍能工作。</p>
             </div>
             <div class="retrieval-source">
-              <div class="score">semantic</div>
-              <h3>Vector</h3>
-              <p>本地默认 embedding 支撑改写、近义、跨表达检索；可持久化并做维度校验。</p>
+              <div class="score">Vector</div>
+              <h3>limit × 2</h3>
+              <p>查询 embedding 失败则空结果；top 5 vector hits 还会触发 graph expansion。</p>
             </div>
             <div class="retrieval-source">
-              <div class="score">relations</div>
-              <h3>Graph</h3>
-              <p>可选关系图扩展概念与实体，适合跨 session 的关联发现。</p>
+              <div class="score">Graph</div>
+              <h3>entities + expansion</h3>
+              <p>先从 query 抽实体做 searchByEntities，再从 top vector chunks 做一跳扩展。</p>
             </div>
           </div>
-          <div class="layout two-col">
+          <div class="do-dont">
             <div class="formula">
-              combinedScore =<br />
-              bm25Weight × 1/(60 + bm25Rank)<br />
-              + vectorWeight × 1/(60 + vectorRank)<br />
-              + graphWeight × 1/(60 + graphRank)
+              combinedScore = Σ effectiveWeight(stream) × 1 / (60 + rank)<br />
+              default weights: BM25 0.4, vector 0.6, graph 0.3<br />
+              unavailable streams get weight 0; remaining weights renormalize
             </div>
             <div class="panel">
-              <h3>返回不是越多越好</h3>
-              <div class="list">
-                <div class="bullet">过量召回后按 agent scope 和 project 过滤。</div>
-                <div class="bullet">按 session 做 diversification，避免一个会话淹没结果。</div>
-                <div class="bullet"><span class="mono">memory_recall</span> 支持 <span class="mono">token_budget</span>，展开用 <span class="mono">expandIds</span> 渐进披露。</div>
-              </div>
+              <h3>后处理不是装饰</h3>
+              <p>合并后先按 session diversify，默认每个 session 最多 3 条；retrievalDepth 至少 20；可选 rerank 只处理前 20 条，失败时回退到 RRF 顺序。</p>
             </div>
           </div>
         </div>
         <div class="footer-line"><span>src/state/hybrid-search.ts</span><span>src/functions/smart-search.ts / src/mcp/server.ts</span></div>
         <aside class="speaker-note">
-          <p>检索页解释为什么不是单一向量库。代码里 HybridSearch 用 RRF 形式融合 BM25、vector 和 graph rank，默认权重来自配置。然后做 session diversification，减少同一会话刷屏。MCP 层的 memory_smart_search 先返回 compact 结果，需要更多上下文时再 expandIds；memory_recall 面向直接注入，支持 token_budget。</p>
+          <p>这一页讲算法而不是接口。tripleStreamSearch 对 BM25 和 vector 都取 limit 乘以 2 的候选，graph 由实体检索和 top vector observation 的一跳扩展组成。融合时 RRF_K 是 60；如果 vector 或 graph 不可用，它们的权重变成 0，剩余权重重新归一化。之后做 session diversification，避免同一会话占满 top-k。rerank 是可选小窗口步骤，失败时直接返回 RRF 结果，所以检索不会依赖 reranker 可用性。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="使用面">
+      <section class="slide rows" data-title="Retrieval interface contract">
         <div class="slide-header">
-          <div class="kicker">Surfaces</div>
-          <h2>使用面：不是只有一个搜索框</h2>
-          <p>agent 常用 MCP，脚本和外部系统用 REST，操作者用 viewer，知识复用用 skills。</p>
+          <div class="kicker">Interface Contract</div>
+          <h2>检索接口：先 compact，再按需展开证据</h2>
+          <p>接口设计把“找候选”和“拿全文”分开，避免每次检索都填满上下文窗口。</p>
         </div>
-        <div class="layout tools-grid">
-          <div class="panel">
-            <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
-              <div class="stat"><strong>53</strong><span>MCP tools</span></div>
-              <div class="stat"><strong>128</strong><span>REST endpoints</span></div>
-              <div class="stat"><strong>6</strong><span>resources</span></div>
-              <div class="stat"><strong>3</strong><span>prompts</span></div>
-            </div>
-            <p class="small" style="margin-top:18px;">默认只需要记住少数高频动作，完整工具面留给高级治理和协作流程。</p>
+        <div class="layout io-grid">
+          <div class="io-card">
+            <h3>memory_recall <code>MCP</code></h3>
+            <p>面向直接上下文注入，要求非空 query，limit 默认 10。</p>
+            <div class="code-line">format: full | compact | narrative</div>
+            <div class="code-line">token_budget: positive integer</div>
+            <p>narrative format 可直接返回文本；其他格式以 JSON content 返回。</p>
           </div>
-          <div class="tool-list">
-            <div class="tool-pill"><code>memory_recall</code><span>查过去的决策、文件修改、问题处理方式。</span></div>
-            <div class="tool-pill"><code>memory_save</code><span>显式保存重要洞察、约定、偏好。</span></div>
-            <div class="tool-pill"><code>memory_smart_search</code><span>混合检索 + compact/expand 渐进披露。</span></div>
-            <div class="tool-pill"><code>memory_sessions</code><span>列出近期会话和观察数量，用于 handoff。</span></div>
-            <div class="tool-pill"><code>memory_commit_lookup</code><span>从 commit SHA 反查产生它的 agent session。</span></div>
-            <div class="tool-pill"><code>memory_verify</code><span>追踪 memory 或 observation 的来源链。</span></div>
+          <div class="io-card">
+            <h3>memory_smart_search <code>function / REST</code></h3>
+            <p>默认返回 compact result：obsId、sessionId、title、type、score、timestamp。</p>
+            <div class="code-line">query → hybrid compact results</div>
+            <div class="code-line">expandIds → full observations, max 20</div>
+            <p>内部函数和 REST 支持 query 或 expandIds；展开路径也应用 agent scope 过滤。</p>
+          </div>
+          <div class="io-card">
+            <h3>memory_smart_search <code>MCP</code></h3>
+            <p>MCP handler 当前仍要求 query 非空，再解析 CSV expandIds 并截到 20。</p>
+            <div class="code-line">expandIds: "obs_a, obs_b"</div>
+            <div class="code-line">limit: clamp 1..100</div>
+            <p>这是接口表面差异：MCP 适合先检索再展开，REST 可只传 expandIds。</p>
           </div>
         </div>
-        <div class="footer-line"><span>src/mcp/tools-registry.ts</span><span>plugin/skills/agentmemory-mcp-tools/REFERENCE.md</span></div>
+        <div class="footer-line"><span>src/mcp/server.ts / src/mcp/tools-registry.ts</span><span>src/functions/smart-search.ts / src/triggers/api.ts</span></div>
         <aside class="speaker-note">
-          <p>这一页把能力面收束成实际使用。虽然有 53 个工具，但分享里只需要讲最常用的四个：recall、save、smart_search、sessions。commit_lookup 和 verify 作为治理例子：它们说明记忆不是黑箱文本，而是可以追溯到会话、commit、observation 的证据链。REST 是等价入口，viewer 是人看的入口。</p>
+          <p>这页把接口边界讲清楚。memory_recall 背后调用 mem::search，适合把结果直接注入 agent 上下文，所以支持 format 和 token_budget。memory_smart_search 背后调用 mem::smart-search，默认返回 compact results，调用方先看到 obsId、sessionId、title、type 和 score，需要证据全文时再用 expandIds 展开。内部函数和 REST 允许只传 expandIds；MCP handler 的 schema 和实现仍要求 query，所以这里不能把 REST 语义直接说成所有表面都一样。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="生命周期与治理">
+      <section class="slide rows" data-title="Retrieval evaluation">
         <div class="slide-header">
-          <div class="kicker">Lifecycle</div>
-          <h2>生命周期与治理：让记忆变少、变准、可删除</h2>
-          <p>长期有用的不是“永远保存”，而是捕获、压缩、合并、验证、遗忘的闭环。</p>
-        </div>
-        <div class="layout" style="grid-template-rows: 1fr auto;">
-          <div class="governance">
-            <div class="panel">
-              <h3>整理</h3>
-              <p><span class="mono">consolidate</span> 把工作记忆、episodic、semantic、procedural 分层；<span class="mono">lessons</span> 保存可复用经验。</p>
-            </div>
-            <div class="panel">
-              <h3>保留</h3>
-              <p><span class="mono">slots</span> 维护小而稳定的项目/全局记忆；<span class="mono">retention</span> 和 <span class="mono">auto-forget</span> 控制增长。</p>
-            </div>
-            <div class="panel">
-              <h3>治理</h3>
-              <p><span class="mono">audit</span>、<span class="mono">verify</span>、<span class="mono">governance_delete</span> 让状态变更可追踪，可解释，也可删除。</p>
-            </div>
-          </div>
-          <div class="two-col" style="display:grid; gap:14px;">
-            <div class="panel">
-              <h3>默认边界</h3>
-              <p>基础捕获与 BM25 检索不需要 LLM。LLM compression、graph extraction、context injection、vision embedding 都是配置开关。</p>
-            </div>
-            <div class="panel">
-              <h3>协作边界</h3>
-              <p>多 agent 可以通过 <span class="mono">AGENT_ID</span> 标记写入，用 <span class="mono">AGENTMEMORY_AGENT_SCOPE</span> 控制召回隔离。</p>
-            </div>
-          </div>
-        </div>
-        <div class="footer-line"><span>src/functions/*</span><span>README: configuration, governance, agent scope</span></div>
-        <aside class="speaker-note">
-          <p>生命周期页强调边界和治理。记忆系统最怕两件事：无限增长和不可解释。agentmemory 的回答是分层整理、slot 化、保留策略、审计和验证。还要明确 opt-in：LLM summary 会花 token，context injection 会消耗上下文，graph extraction 也有开关。默认路径是轻量、本地、可检索。</p>
-        </aside>
-      </section>
-
-      <section class="slide rows" data-title="截图 demo">
-        <div class="slide-header">
-          <div class="kicker">Demo Without Risk</div>
-          <h2>截图 demo：不依赖现场 live 操作，也能讲完整</h2>
-          <p>本机 health 已验证 healthy；viewer、MCP 列表和 iii console 截图组成 2 分钟演示路径。</p>
-        </div>
-        <div class="layout demo-grid">
-          <div class="panel" style="display:grid; gap:12px;">
-            <div class="terminal">
-              <span class="prompt">$</span> curl http://localhost:3111/agentmemory/health<br />
-              {<br />
-              &nbsp;&nbsp;<span class="key">"status"</span>: <span class="ok">"healthy"</span>,<br />
-              &nbsp;&nbsp;<span class="key">"version"</span>: "0.9.27",<br />
-              &nbsp;&nbsp;<span class="key">"viewerPort"</span>: 3113,<br />
-              &nbsp;&nbsp;<span class="key">"viewerSkipped"</span>: false,<br />
-              &nbsp;&nbsp;<span class="key">"connectionState"</span>: "connected"<br />
-              }
-            </div>
-            <div class="terminal">
-              <span class="prompt">$</span> MCP tools<br />
-              memory_recall · memory_save · memory_smart_search · memory_sessions<br />
-              memory_verify · memory_commit_lookup · memory_lesson_save · ...
-            </div>
-          </div>
-          <div class="screenshot-grid">
-            <div class="shot"><span>iii console / workers</span><img src="assets/iii-console/workers.png" alt="iii console workers screenshot" /></div>
-            <div class="shot"><span>iii console / traces</span><img src="assets/iii-console/traces-waterfall.png" alt="iii console traces screenshot" /></div>
-            <div class="shot"><span>iii console / state</span><img src="assets/iii-console/states.png" alt="iii console state screenshot" /></div>
-            <div class="shot"><span>viewer :3113</span><div style="padding:14px;display:grid;gap:10px;align-content:center;background:#111416;">
-              <div class="tag">Sessions</div><div class="tag">Memories</div><div class="tag">Graph</div><div class="tag">Replay</div>
-            </div></div>
-          </div>
-        </div>
-        <div class="footer-line"><span>local health checked 2026-07-02</span><span>assets/iii-console/*.png</span></div>
-        <aside class="speaker-note">
-          <p>现场 demo 最容易被网络、端口和登录状态干扰，所以这里用截图兜底。讲法是：先看 health，证明 daemon、viewer、engine 都连上；再看 MCP 列表，说明 agent 能调哪些工具；然后切到 viewer，讲 session、memory、graph、replay；最后用 iii console 截图解释底层函数、状态和 trace。即使不现场操作，也能完整展示系统面。</p>
-        </aside>
-      </section>
-
-      <section class="slide rows" data-title="证据与边界">
-        <div class="slide-header">
-          <div class="kicker">Evidence</div>
-          <h2>证据与边界：只讲 retrieval，不夸大成端到端 QA</h2>
-          <p>benchmark 能证明检索组件，但不能直接证明 agent 一定会做对任务。</p>
+          <div class="kicker">Evaluation</div>
+          <h2>检索评测：只声明 retrieval，不夸大端到端 QA</h2>
+          <p>现有数字证明的是“能否找回证据”，不是“agent 一定做对任务”。</p>
         </div>
         <div class="layout evidence-grid">
           <div class="panel">
@@ -1159,55 +1354,223 @@
               <thead><tr><th>评测</th><th>结果</th><th>含义</th></tr></thead>
               <tbody>
                 <tr><td>LongMemEval-S</td><td><strong>R@5 95.2%</strong><br /><span class="muted">R@10 98.6%, MRR 88.2%</span></td><td>500 questions，约 48 sessions/question；retrieval-only。</td></tr>
-                <tr><td>coding-agent-life-v1</td><td><strong>R@5 1.000</strong><br /><span class="muted">15 / 15 top-5 hit</span></td><td>小型 agent 工作流语料，主要验证 temporal/multi-session recall。</td></tr>
-                <tr><td>Token savings</td><td><strong>~92%</strong></td><td>与把全部历史塞进上下文相比，top-k recall 只返回所需证据。</td></tr>
+                <tr><td>coding-agent-life-v1</td><td><strong>R@5 1.000</strong><br /><span class="muted">15 / 15 top-5 hit</span></td><td>小型 coding-agent 工作流语料，验证 temporal / multi-session recall。</td></tr>
+                <tr><td>Token savings</td><td><strong>92%</strong></td><td>与加载全部历史相比，top-k recall 只返回检索到的证据。</td></tr>
               </tbody>
             </table>
           </div>
           <div class="panel">
             <h3>边界说明</h3>
             <div class="list">
-              <div class="bullet">R@5 是 gold session 是否进 top-5，不是最终答案正确率。</div>
-              <div class="bullet">LongMemEval 官方 QA 还包括 reader 和 judge；这里不声称 leaderboard 分数。</div>
-              <div class="bullet">上下文注入能帮 agent，但仍需要 agent 读懂并正确执行。</div>
+              <div class="bullet">R@5 是 gold session 是否进入 top-5，不是最终答案正确率。</div>
+              <div class="bullet">LongMemEval 官方 QA 还包含 reader 和 judge；这里不声称 leaderboard 分数。</div>
+              <div class="bullet">上下文注入能帮助 agent，但仍取决于 agent 是否读懂并正确执行。</div>
             </div>
           </div>
         </div>
         <div class="footer-line"><span>benchmark/LONGMEMEVAL.md</span><span>docs/benchmarks/2026-05-20-coding-agent-life-v1.md / benchmark/REAL-EMBEDDINGS.md</span></div>
         <aside class="speaker-note">
-          <p>这页必须讲克制。LongMemEval-S 的 95.2% 是 retrieval recall：gold session 是否被找进 top 5。coding-agent-life 的 1.000 也是 retrieval 指标，而且语料很小。它们证明检索能力和 token 节省，但不能直接推出“agent 端到端一定答对”。这反而增强可信度：我们知道系统边界在哪里。</p>
+          <p>这页必须克制。LongMemEval-S 的 95.2% 是 retrieval recall：gold session 是否进入 top 5。coding-agent-life 的 1.000 也是 retrieval 指标，而且语料很小。92% token saving 来自只返回 top-k 证据而不是加载全部历史。它们证明检索组件有效，但不能直接推出端到端任务一定成功。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="工作流建议">
+      <section class="slide rows" data-title="Summary reliability">
         <div class="slide-header">
-          <div class="kicker">Workflow</div>
-          <h2>落到我们的工作流：三条实践建议</h2>
-          <p>让记忆成为工程习惯，而不是偶尔想起来才用的搜索框。</p>
+          <div class="kicker">Summarization</div>
+          <h2>会话总结：chunk=400、concurrency=6、失败阈值=50%</h2>
+          <p>summary 是 session 级压缩，不替代 observation 检索；它给长会话一个可读骨架。</p>
+        </div>
+        <div class="layout wide-narrow">
+          <div class="path-stack">
+            <div class="path-row"><div class="index">1</div><div><strong>collect compressed observations</strong><span>只总结已经有 title 的 CompressedObservation。</span></div><code>kv.list</code></div>
+            <div class="path-row"><div class="index">2</div><div><strong>chunk large sessions</strong><span>CHUNK_SIZE_DEFAULT=400；SUMMARIZE_CHUNK_SIZE 可覆盖。</span></div><code>CHUNK_SIZE_DEFAULT</code></div>
+            <div class="path-row"><div class="index">3</div><div><strong>parallel batches</strong><span>CHUNK_CONCURRENCY_DEFAULT=6；每块失败后 retry once。</span></div><code>summarizeChunkWithRetry</code></div>
+            <div class="path-row"><div class="index">4</div><div><strong>skip-ratio gate</strong><span>跳过块超过 MAX_SKIP_RATIO=0.5 时整体失败，不产出半盲摘要。</span></div><code>MAX_SKIP_RATIO</code></div>
+            <div class="path-row"><div class="index">5</div><div><strong>parse / validate / score</strong><span>stripXmlWrappers 后解析 XML，用 SummaryOutputSchema 验证并计算 qualityScore。</span></div><code>scoreSummary</code></div>
+          </div>
+          <div class="panel">
+            <h3>可靠性策略</h3>
+            <p>final summarize 也有两次 produce-and-parse 尝试；markdown code fence、前后缀文本会先被 stripXmlWrappers 清理，再进入 XML tag parser。</p>
+            <p>输出必须通过 schema validation，成功后写入 KV.summaries 并记录 audit；无 provider 时明确返回 no_provider。</p>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/functions/summarize.ts</span><span>src/prompts/summary.ts / src/eval/quality.ts</span></div>
+        <aside class="speaker-note">
+          <p>这里把总结当作可靠性问题，而不是简单调用一次模型。小会话走单次总结；大会话默认每 400 条 observation 一块，并发 6 个 chunk 调用。每个 chunk 解析失败、provider error 或网络失败都会 retry once；如果失败块超过 50%，函数直接报 too_many_chunks_skipped。reduce 阶段只合并解析成功的 partial summaries。最终响应还会 strip XML wrapper、schema validation，并计算 qualityScore，所以 summary 是结构化产物，而不是不可控文本。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="Consolidation">
+        <div class="slide-header">
+          <div class="kicker">Consolidation</div>
+          <h2>长期整理：从 observation cluster 到 Memory</h2>
+          <p>consolidation 把多次观察中的重复模式整理成可演化的长期记忆。</p>
+        </div>
+        <div class="layout schema-map">
+          <div class="schema-card">
+            <h3>输入 <code>observations</code></h3>
+            <div class="field-list">
+              <div class="field-row"><code>minObservations</code><span>默认 10；候选不足时返回 insufficient_observations。</span></div>
+              <div class="field-row"><code>importance ≥ 5</code><span>只把相对重要的观察放进候选集合。</span></div>
+              <div class="field-row"><code>concept groups ≥ 3</code><span>按 concept 聚类，至少 3 条观察才进入 LLM 总结。</span></div>
+              <div class="field-row"><code>top 8 / group</code><span>每组按 importance 取前 8 条，限制上下文规模。</span></div>
+              <div class="field-row"><code>MAX_LLM_CALLS=10</code><span>每次 consolidation 最多处理 10 个概念组。</span></div>
+            </div>
+          </div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-card">
+            <h3>输出 <code>Memory</code></h3>
+            <div class="field-list">
+              <div class="field-row"><code>type</code><span>pattern、preference、architecture、bug、workflow、fact。</span></div>
+              <div class="field-row"><code>sourceObservationIds</code><span>长期记忆仍能追溯回原始观察。</span></div>
+              <div class="field-row"><code>version</code><span>同标题记忆可 evolve，新版本 supersedes 旧版本。</span></div>
+              <div class="field-row"><code>project scope</code><span>项目级 consolidation 只演化同项目记忆，避免污染。</span></div>
+              <div class="field-row"><code>audit</code><span>remember/evolve 操作写 audit，detail 标记 create_memory 或 evolve_memory。</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/functions/consolidate.ts</span><span>src/types.ts: Memory</span></div>
+        <aside class="speaker-note">
+          <p>Consolidation 回答“怎么从材料变成知识”。代码默认要求至少 10 条候选 observation，只保留 importance 大于等于 5 的观察，按 concept 分组，并且每组至少 3 条才进入模型。每组只取 importance 最高的 8 条，每次运行最多 10 次 LLM 调用。Memory 类型被限制在六类：pattern、preference、architecture、bug、workflow、fact。关键是 sourceObservationIds、version 和 project scope：长期记忆不是无来源结论，而是可追溯、可演化、可限制作用域的结构化记录。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="Long-term structure">
+        <div class="slide-header">
+          <div class="kicker">Long-Term Structure</div>
+          <h2>“梳理”不是只总结，而是分层放置知识</h2>
+          <p>不同知识进入不同生命周期层：热的保留、稳的固化、错的修正、敏感的删除。</p>
+        </div>
+        <div class="layout narrow-wide">
+          <div class="panel">
+            <h3>层次不是装饰</h3>
+            <p>summary 给会话可读骨架，memory 给长期事实和模式，lesson 给可复用经验，slot 给小而稳定的上下文，audit/verify/forget 给治理闭环。</p>
+          </div>
+          <div class="layer-stack">
+            <div class="layer-row"><strong>Observation</strong><span>事件级证据，检索和回放的最小来源。</span><code>KV.observations</code></div>
+            <div class="layer-row"><strong>Session Summary</strong><span>会话级压缩，便于 handoff 和人读。</span><code>KV.summaries</code></div>
+            <div class="layer-row"><strong>Memory</strong><span>长期模式、偏好、架构事实和 bug 经验。</span><code>KV.memories</code></div>
+            <div class="layer-row"><strong>Lesson</strong><span>可强化、可衰减的经验片段。</span><code>lesson_save</code></div>
+            <div class="layer-row"><strong>Slot</strong><span>pinned 的项目/全局上下文，有尺寸限制。</span><code>src/functions/slots.ts</code></div>
+            <div class="layer-row"><strong>Governance</strong><span>verify、audit、forget 维持来源、责任和删除能力。</span><code>audit / verify</code></div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/functions/slots.ts</span><span>src/functions/verify.ts / src/functions/audit.ts / src/functions/forget.ts</span></div>
+        <aside class="speaker-note">
+          <p>这页解释“梳理”的含义。总结只是其中一层：它压缩一个 session，但不会自动变成长期原则。Memory 是跨观察的长期结论，Lesson 是可强化经验，Slot 是少量稳定上下文，Governance 层让这些状态可验证、可审计、可删除。这样长期记忆不会只是越来越大的文本文件，而是有生命周期位置的知识结构。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="Governance">
+        <div class="slide-header">
+          <div class="kicker">Governance</div>
+          <h2>治理闭环：结论必须能回到证据，也必须能删除</h2>
+          <p>长期记忆的可靠性来自可验证来源、可查询审计和一致的索引清理。</p>
+        </div>
+        <div class="layout">
+          <div class="trace-grid">
+            <div class="trace-node">
+              <code>sourceObservationIds</code>
+              <h3>证据链</h3>
+              <p>Memory 保存来源 observation id；consolidation 和 explicit remember 都可以携带这些引用。</p>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-node">
+              <code>mem::verify</code>
+              <h3>验证</h3>
+              <p>verify 读取 memory 后按 sourceObservationIds 找回 citation、session project、status 和 timestamp。</p>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-node">
+              <code>forget / delete</code>
+              <h3>撤销</h3>
+              <p>forget 和 governance-delete 删除 KV、access log、BM25、vector，并在删除后 flush index save。</p>
+            </div>
+          </div>
+          <div class="governance">
+            <div class="panel">
+              <h3>Audit</h3>
+              <p>recordAudit / safeAudit 记录 remember、evolve、compress、forget、delete 等操作，保留 action、reason、target ids。</p>
+            </div>
+            <div class="panel">
+              <h3>Scope</h3>
+              <p>project scope 防止跨项目演化；agent scope isolation 在 search 和 smart-search 路径上 fail-closed。</p>
+            </div>
+            <div class="panel">
+              <h3>Deletion</h3>
+              <p>删除不是只删一行：还要删除访问日志、搜索索引和向量索引，否则旧证据会从检索路径复活。</p>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>src/functions/verify.ts / governance.ts</span><span>src/functions/remember.ts / audit.ts / search.ts</span></div>
+        <aside class="speaker-note">
+          <p>这页是长期记忆和普通 prompt cache 的关键区别。Memory 不是无来源的自然语言结论；sourceObservationIds 让它能回到具体 observation。mem::verify 会把 memory 的 citation 找回来，并显示 session project、status、timestamp 等来源信息。审计层记录谁做了 remember、evolve、compress、forget 或 delete。删除路径也不是只删 KV 行，还要清理 access log、BM25、vector index，并 flush 持久化，避免已经删除的记忆从索引快照里重新出现。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="边界与成本">
+        <div class="slide-header">
+          <div class="kicker">Limits & Cost</div>
+          <h2>边界：检索系统有效，不等于记忆永远正确</h2>
+          <p>科研分享里需要把可测能力、成本来源和失败模式讲清楚。</p>
+        </div>
+        <div class="layout cost-grid">
+          <div class="cost-card">
+            <div class="label">retrieval</div>
+            <h3>可评测的是找回证据</h3>
+            <p>LongMemEval-S 的 R@5 衡量 gold session 是否进入 top-k；reader 是否正确使用证据是另一个问题。</p>
+          </div>
+          <div class="cost-card">
+            <div class="label">LLM cost</div>
+            <h3>默认路径不烧模型</h3>
+            <p>capture 默认 synthetic compression；LLM 成本主要来自 auto-compress、summarize、consolidate 和可选 rerank。</p>
+          </div>
+          <div class="cost-card">
+            <div class="label">freshness</div>
+            <h3>索引和 KV 可能短暂不一致</h3>
+            <p>vector 写失败会降级；删除路径需要 flush index save；rebuildIndex 是恢复和补齐机制。</p>
+          </div>
+          <div class="cost-card">
+            <div class="label">quality</div>
+            <h3>总结和整理依赖生成质量</h3>
+            <p>summary 有 schema 和 quality score；consolidation 有 evidence cap 和 audit，但仍需要 verify 和 forget 闭环。</p>
+          </div>
+        </div>
+        <div class="footer-line"><span>boundary conditions</span><span>retrieval ≠ reader correctness ≠ task success</span></div>
+        <aside class="speaker-note">
+          <p>这一页防止过度声明。agentmemory 的强项是把历史事件变成可检索证据，并且这个 retrieval 能被 benchmark。它不保证下游 agent 一定读懂证据，也不保证 LLM 生成的 summary 或 consolidation 永远正确。成本上，默认 capture 不调用 LLM；真正的模型成本来自 opt-in auto-compress、summarize、consolidate 和可选 rerank。可靠性上，vector failure 是可降级的，删除需要同步索引，长期结论需要 verify 和 forget 闭环。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="Takeaway">
+        <div class="slide-header">
+          <div class="kicker">Takeaway</div>
+          <h2>何时该记，何时该搜，何时该总结</h2>
+          <p>给科研听众的结论：agentmemory 是一个可评测的 retrieval + lifecycle 系统。</p>
         </div>
         <div class="layout practice">
           <div class="panel">
             <div class="big-num">01</div>
-            <h3>开工先 recall</h3>
-            <p>碰到架构、历史决策、跨文件修改、测试习惯时，先查过去会话，不要让 agent 重新猜。</p>
-            <div class="code-line">memory_recall(query)</div>
+            <h3>该记</h3>
+            <p>当信息未来会改变 agent 行为，并且能绑定到来源时，记录成 observation 或显式 memory。</p>
+            <div class="code-line">capture / remember</div>
           </div>
           <div class="panel">
             <div class="big-num">02</div>
-            <h3>重要结论要 remember</h3>
-            <p>设计选择、迁移坑、用户偏好、复盘结论值得显式保存，后续自动捕获再补充证据。</p>
-            <div class="code-line">memory_save(content, concepts)</div>
+            <h3>该搜</h3>
+            <p>当问题依赖历史决策、文件变更、错误处理或跨 session 事实时，先 retrieve，再生成。</p>
+            <div class="code-line">retrieve top-k evidence</div>
           </div>
           <div class="panel">
             <div class="big-num">03</div>
-            <h3>交接看 session 与 commit</h3>
-            <p>新会话用 handoff 接上下文；追溯代码用 commit-context 找回当时 agent 的工作轨迹。</p>
-            <div class="code-line">handoff / commit-context</div>
+            <h3>该总结</h3>
+            <p>当单个 session 过长或需要交接时做 summary；当重复模式出现时再 consolidate 成长期记忆。</p>
+            <div class="code-line">summarize / consolidate</div>
           </div>
         </div>
-        <div class="footer-line"><span>结尾</span><span>Capture → Index → Recall → Coordinate</span></div>
+        <div class="footer-line"><span>closing</span><span>Capture → Compress → Index → Retrieve → Summarize → Consolidate</span></div>
         <aside class="speaker-note">
-          <p>结尾回到可执行建议。第一，开工先 recall，特别是遇到历史和跨文件问题。第二，重要结论要显式 remember，因为自动捕获是材料，显式记忆是判断。第三，交接和追溯用 session、handoff、commit-context，把“为什么这样写”从口头知识变成可查询证据。最后重复四段模型收束：Capture、Index、Recall、Coordinate。</p>
+          <p>结尾把系统变成操作原则。该记的是有来源、会影响未来行为的事件；该搜的是历史证据，而不是让 agent 重新猜；该总结的是长会话和交接上下文；该 consolidation 的是多次出现的模式。最终 takeaway 是：agentmemory 不是单点工具，而是一个可以做 retrieval 评测、也能做生命周期治理的长期记忆系统。</p>
         </aside>
       </section>
     </div>
@@ -1215,7 +1578,7 @@
 
   <nav class="controls" aria-label="slide controls">
     <button id="prev" type="button" aria-label="上一页">‹</button>
-    <div class="page-indicator" id="pageIndicator">1 / 13</div>
+    <div class="page-indicator" id="pageIndicator">1 / 17</div>
     <button id="next" type="button" aria-label="下一页">›</button>
     <button id="notesToggle" type="button" aria-label="备注">N</button>
     <button id="fullToggle" type="button" aria-label="全屏">F</button>

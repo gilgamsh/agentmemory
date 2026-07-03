@@ -9,20 +9,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0a0d11;
-      --panel: #12171d;
-      --panel-2: #171d24;
-      --line: #272e37;
-      --line-soft: #1c2129;
-      --ink: #ecf0f4;
-      --ink-2: #d4d9df;
-      --muted: #929aa5;
-      --faint: #626b76;
-      --green: #6ad19a;
-      --cyan: #7ec1d8;
-      --amber: #e5b06a;
-      --red: #ef7e78;
-      --violet: #ac9ce0;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-2: #fbfbfd;
+      --line: #e4e7ec;
+      --line-soft: #eef0f4;
+      --ink: #0f1419;
+      --ink-2: #2b3340;
+      --muted: #5a6672;
+      --faint: #8b95a1;
+      --green: #0a9c5c;
+      --green-soft: rgba(10, 156, 92, 0.09);
+      --cyan: #0a8fb5;
+      --amber: #b3730d;
+      --amber-soft: rgba(179, 115, 13, 0.09);
+      --red: #cf3f3f;
+      --violet: #7550c9;
       --mono: "JetBrains Mono", "SF Mono", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
       --sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
@@ -32,8 +34,8 @@
     body {
       margin: 0;
       background:
-        radial-gradient(1100px 700px at 8% -8%, rgba(106, 209, 154, 0.09), transparent 55%),
-        radial-gradient(900px 500px at 92% 108%, rgba(229, 176, 106, 0.055), transparent 55%),
+        radial-gradient(1100px 700px at 8% -8%, rgba(10, 156, 92, 0.05), transparent 55%),
+        radial-gradient(900px 500px at 92% 108%, rgba(179, 115, 13, 0.045), transparent 55%),
         var(--bg);
       color: var(--ink);
       font-family: var(--sans);
@@ -64,12 +66,12 @@
       width: min(100%, calc((100vh - 44px) * 16 / 9));
       height: min(calc(100vh - 44px), calc((100vw - 44px) * 9 / 16));
       aspect-ratio: 16 / 9;
-      background: #0c1015;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid rgba(15, 20, 30, 0.06);
+      border-radius: 14px;
       box-shadow:
-        0 40px 100px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(255, 255, 255, 0.015) inset;
+        0 30px 80px rgba(15, 20, 30, 0.09),
+        0 2px 6px rgba(15, 20, 30, 0.04);
       overflow: hidden;
     }
 
@@ -79,9 +81,9 @@
       display: none;
       padding: 48px 60px 46px;
       background:
-        linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-        linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-        #0b0e12;
+        linear-gradient(90deg, rgba(15, 20, 30, 0.03) 1px, transparent 1px),
+        linear-gradient(rgba(15, 20, 30, 0.03) 1px, transparent 1px),
+        #ffffff;
       background-size: 96px 96px;
       overflow: hidden;
     }
@@ -107,13 +109,13 @@
       bottom: 12%;
       width: 2px;
       background: linear-gradient(180deg, transparent, var(--green) 24%, var(--green) 76%, transparent);
-      opacity: 0.55;
+      opacity: 0.85;
     }
 
     .slide.cover::before { display: none; }
     .slide.cover {
       padding: 0;
-      background: #06080a;
+      background: #f6f7f9;
     }
 
     .cover-bg {
@@ -122,15 +124,15 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      opacity: 0.65;
+      opacity: 0.32;
     }
 
     .cover-shade {
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(115deg, rgba(6, 8, 10, 0.96) 0%, rgba(6, 8, 10, 0.72) 42%, rgba(6, 8, 10, 0.18) 100%),
-        linear-gradient(0deg, rgba(6, 8, 10, 0.92), rgba(6, 8, 10, 0.05) 55%);
+        linear-gradient(115deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.68) 42%, rgba(255, 255, 255, 0.18) 100%),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.05) 55%);
     }
 
     .cover-content {
@@ -226,10 +228,10 @@
       display: inline-flex;
       align-items: center;
       min-height: 28px;
-      border: 1px solid rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(15, 20, 30, 0.1);
       border-radius: 999px;
       padding: 4px 12px;
-      background: rgba(255, 255, 255, 0.028);
+      background: rgba(15, 20, 30, 0.025);
       color: var(--ink-2);
       font-family: var(--mono);
       font-size: 12px;
@@ -277,12 +279,12 @@
     .rows { grid-template-rows: auto 1fr; }
 
     .panel {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.038), rgba(255, 255, 255, 0.01));
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: #ffffff;
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
       padding: 22px;
       min-height: 0;
-      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+      box-shadow: 0 1px 2px rgba(15, 20, 30, 0.03);
     }
 
     .panel h3 { margin-bottom: 12px; color: var(--ink); }
@@ -297,7 +299,7 @@
 
     .stat {
       border-top: 1px solid var(--green);
-      background: linear-gradient(180deg, rgba(106, 209, 154, 0.07), rgba(255, 255, 255, 0.015));
+      background: linear-gradient(180deg, var(--green-soft), rgba(255, 255, 255, 0));
       border-radius: 0 0 10px 10px;
       padding: 14px 14px 12px;
       min-height: 92px;
@@ -338,7 +340,7 @@
       margin-top: 12px;
       background: var(--green);
       border-radius: 50%;
-      box-shadow: 0 0 0 3px rgba(106, 209, 154, 0.14);
+      box-shadow: 0 0 0 3px rgba(10, 156, 92, 0.16);
     }
 
     .flow {
@@ -350,10 +352,10 @@
 
     .flow-step {
       position: relative;
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
       padding: 20px 18px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       min-height: 164px;
       display: grid;
       align-content: start;
@@ -385,10 +387,10 @@
 
     .primitive {
       min-height: 250px;
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
       padding: 22px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       display: grid;
       align-content: start;
       gap: 16px;
@@ -398,11 +400,11 @@
       height: 48px;
       display: grid;
       place-items: center;
-      border: 1px solid rgba(106, 209, 154, 0.3);
+      border: 1px solid rgba(10, 156, 92, 0.28);
       border-radius: 10px;
       font-family: var(--mono);
       color: var(--green);
-      background: rgba(106, 209, 154, 0.08);
+      background: rgba(10, 156, 92, 0.08);
       font-size: 22px;
     }
     .primitive p { font-size: 16px; }
@@ -412,8 +414,8 @@
       font-family: var(--mono);
       font-size: 14px;
       color: var(--ink);
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: #f4f5f7;
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 6px;
       padding: 7px 10px;
       white-space: nowrap;
@@ -427,9 +429,9 @@
       align-items: stretch;
     }
     .arch-box {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       padding: 14px;
       display: grid;
       align-content: center;
@@ -510,9 +512,9 @@
       grid-template-columns: 32px 1fr 190px;
       gap: 14px;
       align-items: center;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(15, 20, 30, 0.07);
       border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.006));
+      background: #ffffff;
       padding: 12px 14px;
     }
     .path-row .index {
@@ -543,9 +545,9 @@
       gap: 16px;
     }
     .retrieval-source {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       padding: 20px;
       min-height: 174px;
       display: grid;
@@ -582,10 +584,10 @@
       gap: 10px;
     }
     .tool-pill {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 10px;
       padding: 12px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.006));
+      background: #ffffff;
       min-height: 76px;
     }
     .tool-pill code {
@@ -640,7 +642,7 @@
       min-height: 0;
     }
     .shot {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 10px;
       overflow: hidden;
       background: rgba(255, 255, 255, 0.02);
@@ -719,9 +721,9 @@
       align-items: stretch;
     }
     .lifecycle-step {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.006));
+      background: #ffffff;
       padding: 15px 13px;
       min-height: 176px;
       display: grid;
@@ -752,9 +754,9 @@
       min-height: 0;
     }
     .schema-card {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       padding: 20px;
       display: grid;
       gap: 12px;
@@ -818,9 +820,9 @@
       min-height: 0;
     }
     .compact-card {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       padding: 16px;
       display: grid;
       align-content: start;
@@ -845,9 +847,9 @@
       min-height: 0;
     }
     .trace-node {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       padding: 20px;
       min-height: 206px;
       display: grid;
@@ -878,9 +880,9 @@
       min-height: 0;
     }
     .io-card {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       padding: 18px;
       display: grid;
       align-content: start;
@@ -903,9 +905,9 @@
       gap: 14px;
     }
     .cost-card {
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+      background: #ffffff;
       padding: 20px;
       min-height: 230px;
       display: grid;
@@ -930,9 +932,9 @@
       grid-template-columns: 190px 1fr 180px;
       gap: 14px;
       align-items: center;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(15, 20, 30, 0.07);
       border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.006));
+      background: #ffffff;
       padding: 13px 14px;
       min-width: 0;
     }
@@ -963,9 +965,9 @@
       grid-template-columns: 160px 1fr 118px;
       gap: 14px;
       align-items: center;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(15, 20, 30, 0.07);
       border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.006));
+      background: #ffffff;
       padding: 13px 14px;
       min-height: 74px;
     }

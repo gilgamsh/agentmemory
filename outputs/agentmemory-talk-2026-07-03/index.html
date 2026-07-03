@@ -1014,7 +1014,7 @@
         <div class="cover-content">
           <div class="brand-row"><img src="assets/logo.svg" alt="agentmemory logo" /> agentmemory / 2026-07-03</div>
           <h1>agentmemory</h1>
-          <p class="subtitle">从事件流到长期知识：agentmemory 的记录、索引、检索与总结机制</p>
+          <p class="subtitle">从事件证据到可检索记忆：agentmemory 的检索与记忆形成机制</p>
           <div class="meta-line">
             <span class="tag">memory lifecycle</span>
             <span class="tag">retrieval evaluation</span>
@@ -1022,7 +1022,7 @@
           </div>
         </div>
         <aside class="speaker-note">
-          <p>开场先把叙事从“工具集合”切到“记忆生命周期”。今天不把重点放在 MCP、REST 或 viewer 的界面数量，而是解释一个 coding agent 的事件流如何变成长期知识：先记录什么，再压缩成可索引单元，之后如何融合检索，什么时候总结和整理，最后用 retrieval benchmark 说明效果和边界。</p>
+          <p>开场先把 agentmemory 放在科研问题里：它不是一个接口清单，而是在研究 coding agent 的历史如何变成可评测的证据，再进一步形成长期记忆。今天主线只有两条：第一，事件怎样被压缩成可以被检索系统命中的 evidence unit；第二，多次 evidence 怎样被整理成更稳定的 memory。这样后面的设计、指标和边界都能围绕 recall 与 memory formation 来讲。</p>
         </aside>
       </section>
 
@@ -1030,7 +1030,7 @@
         <div class="slide-header">
           <div class="kicker">Problem</div>
           <h2>问题不是上下文短，而是经验不可积累</h2>
-          <p>把更多历史塞进 prompt 不能解决长期记忆的三个核心约束：不可检索、不可验证、不可演化。</p>
+          <p>把更多历史塞进 prompt 不能解决长期记忆的三个核心约束：不可积累、不可检索、不可追踪。</p>
         </div>
         <div class="layout three-col">
           <div class="panel">
@@ -1039,88 +1039,90 @@
           </div>
           <div class="panel">
             <h3>不可检索</h3>
-            <p>旧上下文散落在聊天、终端输出、commit 和文件里；agent 只能重新猜，不能按证据找回。</p>
+            <p>旧上下文散落在聊天、终端输出、commit 和文件里；agent 只能重新grep，不能按证据找回。</p>
           </div>
           <div class="panel">
-            <h3>不可验证</h3>
-            <p>没有 observation id、session id、来源路径和删除记录，记忆就会变成不可审计的软提示。</p>
+            <h3>不可追踪</h3>
+            <p>没有 observation id、session id 和来源路径，就无法定位证据，也无法知道长期结论来自哪段历史。</p>
           </div>
         </div>
-        <div class="footer-line"><span>问题定义</span><span>上下文需要生命周期，而不是更长 prompt</span></div>
+        <div class="footer-line"><span>问题定义</span><span>long context is storage, not accumulated memory</span></div>
         <aside class="speaker-note">
-          <p>这一页先建立科研听众熟悉的问题形式：我们不是在问“窗口能不能更长”，而是在问经验是否能成为可查询、可验证、可更新的状态。长上下文只解决短期容量；长期 agent 需要的是从事件到索引、从索引到检索、从检索到组织的闭环。后面的每个机制都对应这里的一个约束。</p>
+          <p>这一页保留原来更直观的问题表述：长期 agent 的痛点不是单纯窗口短，而是经验没有积累机制，也没有按证据找回的能力。第三点用“不可追踪”来替代抽象的“不可验证”：如果历史没有 observation id、session id 和来源路径，我们就不知道 retrieval 的 gold evidence 是什么，也无法回到支撑长期结论的那段历史。后面的 compress、retrieve 和 consolidate 都是在补这些追踪边界。</p>
         </aside>
       </section>
 
       <section class="slide rows" data-title="生命周期模型">
         <div class="slide-header">
           <div class="kicker">Lifecycle Model</div>
-          <h2>Capture → Compress → Index → Retrieve → Summarize → Consolidate</h2>
-          <p>agentmemory 把“记忆”拆成可实现、可测量、可治理的六个阶段。</p>
+          <h2>五种操作，对应不同产物边界</h2>
+          <p>capture、compress、retrieve、summarize、consolidate 不是操作同一种“记忆”，而是记忆周期里的不同转换。</p>
         </div>
-        <div class="layout">
-          <div class="lifecycle-flow">
-            <div class="lifecycle-step"><span class="num">01</span><h3>Capture</h3><p>从 prompt、工具调用、错误、文件变更和显式保存中形成事件流。</p></div>
-            <div class="lifecycle-step"><span class="num">02</span><h3>Compress</h3><p>把 raw event 转成标题、叙述、概念、文件和置信度。</p></div>
-            <div class="lifecycle-step"><span class="num">03</span><h3>Index</h3><p>对同一观察建立 keyword、semantic 和 relation 入口。</p></div>
-            <div class="lifecycle-step"><span class="num">04</span><h3>Retrieve</h3><p>按问题融合召回，控制 session 多样性和 token budget。</p></div>
-            <div class="lifecycle-step"><span class="num">05</span><h3>Summarize</h3><p>把一个 session 压成结构化摘要，保留决策和文件线索。</p></div>
-            <div class="lifecycle-step"><span class="num">06</span><h3>Consolidate</h3><p>跨观察聚合成长期 memory、lesson、slot 和治理记录。</p></div>
+        <div class="layout evidence-grid">
+          <div class="panel">
+            <table>
+              <thead><tr><th>操作</th><th>输入</th><th>产物 / 边界</th></tr></thead>
+              <tbody>
+                <tr><td>Capture</td><td>raw event</td><td>RawObservation：带来源的事件证据</td></tr>
+                <tr><td>Compress</td><td>单条 observation</td><td>CompressedObservation：可检索单元</td></tr>
+                <tr><td>Retrieve</td><td>query</td><td>top-k evidence：按问题找回证据</td></tr>
+                <tr><td>Summarize</td><td>一个 session</td><td>SessionSummary：会话摘要</td></tr>
+                <tr><td>Consolidate</td><td>多个 sessions / observations</td><td>Memory：带来源的长期结论</td></tr>
+              </tbody>
+            </table>
           </div>
-          <div class="do-dont">
-            <div class="panel">
-              <h3>系统问题</h3>
-              <p>每个阶段都是一个边界：输入是什么、产物是什么、失败时怎么降级、是否需要 LLM、是否可审计。</p>
-            </div>
-            <div class="panel">
-              <h3>评测问题</h3>
-              <p>最容易先评测的是 retrieval：gold session 是否出现在 top-k。summary 和 consolidation 需要额外质量指标。</p>
+          <div class="panel">
+            <h3>关键区分</h3>
+            <div class="list">
+              <div class="bullet">compress 让单条事件可以被索引和召回。</div>
+              <div class="bullet">summarize 让一个 session 可以被人或 agent 快速浏览。</div>
+              <div class="bullet">consolidate 从多条证据里归纳稳定模式。</div>
             </div>
           </div>
         </div>
-        <div class="footer-line"><span>mental model</span><span>capture / compression / indexing / retrieval / organization</span></div>
+        <div class="footer-line"><span>mental model</span><span>event → evidence unit → retrieved evidence → session summary → long-term memory</span></div>
         <aside class="speaker-note">
-          <p>这页给出全场主线。六个阶段不是营销词，而是系统边界：Capture 负责材料，Compress 负责把材料变成可索引单元，Index 决定检索入口，Retrieve 决定如何拿回来，Summarize 是会话级压缩，Consolidate 是长期知识组织。科研听众可以把它看成 retrieval system 加 memory lifecycle 的组合。</p>
+          <p>这页专门解决术语混淆。这里不是说有五种“记忆粒度”，而是说生命周期里有五种不同产物边界。capture 产生带来源的事件证据；compress 把单条事件变成检索系统能排序的单元；retrieve 返回 top-k evidence；summarize 面向一个 session，产物是会话摘要；consolidate 才是长期记忆形成，它需要跨多条 observation 找重复模式，再生成有来源的长期 Memory。边界分清之后，评测也更清楚：retrieval 先评证据能不能回来，summary 和 consolidation 要另设质量标准。</p>
         </aside>
       </section>
 
       <section class="slide rows" data-title="记录边界">
         <div class="slide-header">
           <div class="kicker">What To Store</div>
-          <h2>什么适合记，什么不适合直接记</h2>
-          <p>长期记忆不是全量日志。好记忆应该有来源、能被检索、未来会改变 agent 行为。</p>
+          <h2>记录边界：先问它未来能否作为证据</h2>
+          <p>长期记忆不是全量日志。适合保留的信息应能被检索、能回到来源，并且会改变未来行为。</p>
         </div>
         <div class="layout do-dont">
           <div class="panel">
             <h3>适合进入 observation</h3>
             <div class="list">
               <div class="bullet">用户意图和任务边界：prompt intent、目标、约束。</div>
-              <div class="bullet">工具动作和结果：命令、搜索、读写文件、失败信息。</div>
-              <div class="bullet">文件编辑和决策：改了哪里、为什么改、替代方案。</div>
-              <div class="bullet">显式记忆：偏好、架构事实、工作流、已确认的经验。</div>
+              <div class="bullet">工具动作和结果：命令、搜索、读写文件、错误、指标。</div>
+              <div class="bullet">文件编辑和决策：改了哪里、为什么改、哪些方案被排除。</div>
+              <div class="bullet">已确认事实：偏好、架构约束、工作流、可复用经验。</div>
             </div>
           </div>
           <div class="panel">
-            <h3>不适合原样长期化</h3>
+            <h3>不适合直接变长期事实</h3>
             <div class="list">
-              <div class="bullet">secret、token、私密片段：先做隐私过滤，不把泄漏固化。</div>
               <div class="bullet">噪声日志和长输出：除非包含错误、指标或决策证据。</div>
-              <div class="bullet">无来源偏好：没有 session 或观察来源，后续很难验证。</div>
-              <div class="bullet">临时猜测：应保留为低置信 observation，而不是强记忆。</div>
+              <div class="bullet">无来源偏好：没有 session 或 observation 来源，后续很难核对。</div>
+              <div class="bullet">未确认结论：先保留为观察证据，不要直接写成长期事实。</div>
+              <div class="bullet">瞬时状态：进度提示、一次性 UI 状态、不会影响未来决策的文本。</div>
             </div>
           </div>
         </div>
-        <div class="footer-line"><span>recording policy</span><span>src/functions/privacy.ts / src/functions/observe.ts</span></div>
+        <div class="footer-line"><span>recording policy</span><span>observation evidence before long-term claim</span></div>
         <aside class="speaker-note">
-          <p>这一页解释为什么不能把所有东西都叫记忆。agentmemory 的基础材料是 observation，但长期有用的是带来源的观察：用户想做什么、工具做了什么、失败在哪里、最后做了什么决定。相反，secret、噪声日志和没有来源的偏好会污染系统。这里的标准不是“文本是否出现过”，而是它未来能否作为证据被找回和验证。</p>
+          <p>这一页回答“捕获什么才有研究价值”。agentmemory 不是把 transcript 原样堆起来，而是优先保存未来可能被查询的问题证据：任务边界、工具结果、文件改动、失败原因和已确认事实。未确认结论也可以留下，但应该停留在 observation 层，等更多证据出现后再 consolidate。系统边界仍会处理敏感字段和坏输入，但主线不是合规工程，而是让材料能成为未来 recall 与记忆形成的可靠依据。</p>
         </aside>
       </section>
 
       <section class="slide rows" data-title="Observation schema">
         <div class="slide-header">
           <div class="kicker">Schema Transform</div>
-          <h2>RawObservation → CompressedObservation</h2>
-          <p>压缩的目标不是写摘要文章，而是把事件变成稳定的检索单元。</p>
+          <h2>事件证据 → 检索单元</h2>
+          <p>压缩的目标不是写摘要文章，而是把一条事件转成稳定、可排序、可引用的 observation。</p>
         </div>
         <div class="layout schema-map">
           <div class="schema-card">
@@ -1129,8 +1131,8 @@
               <div class="field-row"><code>hookType</code><span>事件入口：prompt、tool、failure、compact、session。</span></div>
               <div class="field-row"><code>toolInput</code><span>文件路径、命令、查询条件等可抽取线索。</span></div>
               <div class="field-row"><code>toolOutput</code><span>结果、错误、截图或命令输出的原始证据。</span></div>
-              <div class="field-row"><code>raw</code><span>隐私过滤后的原始 payload，用于回放和追溯。</span></div>
-              <div class="field-row"><code>sessionId</code><span>来源边界；后续检索、总结、审计都依赖它。</span></div>
+              <div class="field-row"><code>raw</code><span>处理后的原始 payload，用于回放和追溯。</span></div>
+              <div class="field-row"><code>sessionId</code><span>来源边界；后续检索、总结、核对都依赖它。</span></div>
             </div>
           </div>
           <div class="schema-arrow">→</div>
@@ -1139,7 +1141,7 @@
             <div class="field-list">
               <div class="field-row"><code>type/title</code><span>给检索和展示稳定的类别与标题。</span></div>
               <div class="field-row"><code>narrative</code><span>短叙述，连接输入、输出和任务语境。</span></div>
-              <div class="field-row"><code>concepts</code><span>主题标签，用于概念聚合和 consolidation。</span></div>
+              <div class="field-row"><code>concepts</code><span>可选主题标签，用于后续概念聚合。</span></div>
               <div class="field-row"><code>files</code><span>文件级证据，用于代码库相关召回。</span></div>
               <div class="field-row"><code>importance</code><span>决定保留、总结和长期整理时的优先级。</span></div>
               <div class="field-row"><code>confidence</code><span>区分启发式压缩、LLM 压缩和人工确认记忆。</span></div>
@@ -1149,196 +1151,172 @@
         </div>
         <div class="footer-line"><span>src/types.ts</span><span>src/functions/compress-synthetic.ts</span></div>
         <aside class="speaker-note">
-          <p>这页讲数据结构。RawObservation 是事件证据，CompressedObservation 是检索单元。注意字段设计：type、title、narrative 让它可读，concepts 和 files 让它可聚合，importance 和 confidence 让它能被治理。source 不是一个单独魔法字段，而是由 id、sessionId、timestamp、agentId 以及长期 Memory 的 sourceObservationIds 组成证据链。</p>
+          <p>这一页把“可检索单元”落到字段上。RawObservation 保留事件证据：入口、输入、输出、原始 payload 和 session 边界。CompressedObservation 则服务于召回：type 和 title 给排序与展示稳定锚点，narrative 提供短上下文，files 让代码库问题能按路径命中，importance 和 confidence 告诉后续步骤这条证据有多值得用。concepts 是可选增强，不是启发式路径必须生成的主题。source 链由 id、sessionId、timestamp 和后续 sourceObservationIds 共同构成。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="Capture pipeline">
+      <section class="slide rows" data-title="事件到证据单元">
         <div class="slide-header">
-          <div class="kicker">Capture Pipeline</div>
-          <h2>捕获链路：入口只是入口，关键是边界处理</h2>
-          <p>hooks 和 REST 把事件送进系统；真正重要的是验证、隐私过滤、去重、压缩和索引更新。</p>
+          <div class="kicker">Event To Evidence</div>
+          <h2>Capture 的目标：把事件流变成可召回证据</h2>
+          <p>研究问题不是入口有多少，而是每次事件能否稳定地产生 observation、索引信号和来源边界。</p>
         </div>
         <div class="layout wide-narrow">
           <div class="path-stack">
-            <div class="path-row"><div class="index">1</div><div><strong>validate</strong><span>要求 sessionId、hookType、timestamp；系统边界先拒绝坏输入。</span></div><code>mem::observe</code></div>
-            <div class="path-row"><div class="index">2</div><div><strong>privacy filter</strong><span>先对 raw payload 做 stripPrivateData，避免把敏感内容固化。</span></div><code>stripPrivateData</code></div>
-            <div class="path-row"><div class="index">3</div><div><strong>dedup</strong><span>基于 session、tool、input 去重，减少重复工具调用造成的污染。</span></div><code>DedupMap</code></div>
-            <div class="path-row"><div class="index">4</div><div><strong>synthetic compression</strong><span>默认 zero-LLM，把 raw event 启发式压成 title、narrative、files、type。</span></div><code>buildSyntheticCompression</code></div>
-            <div class="path-row"><div class="index">5</div><div><strong>index update</strong><span>写 KV 后更新 BM25 和 vector index，并把事件推给 viewer stream。</span></div><code>getSearchIndex().add</code></div>
+            <div class="path-row"><div class="index">1</div><div><strong>event boundary</strong><span>sessionId、hookType、timestamp 让 raw event 有可引用的边界。</span></div><code>RawObservation</code></div>
+            <div class="path-row"><div class="index">2</div><div><strong>normalize + dedup</strong><span>基于 session、tool、input 建立稳定身份，减少重复证据。</span></div><code>DedupMap</code></div>
+            <div class="path-row"><div class="index">3</div><div><strong>synthetic compress</strong><span>默认 zero-LLM，抽取 type、title、files、narrative。</span></div><code>buildSyntheticCompression</code></div>
+            <div class="path-row"><div class="index">4</div><div><strong>observation store</strong><span>把原始证据和压缩单元写入 memory store / observation store。</span></div><code>store observation</code></div>
+            <div class="path-row"><div class="index">5</div><div><strong>retrieval signals</strong><span>为同一 observation 形成 keyword、semantic。</span></div><code>search index</code></div>
           </div>
           <div class="panel">
-            <h3>为什么默认不用 LLM</h3>
-            <p>每个 tool event 都调用模型会把记忆系统变成成本中心。agentmemory 默认用 synthetic compression 保证可检索；需要更高质量摘要时再开启 LLM compression。</p>
-            <p class="source">补充：完整 MCP / REST 接口是系统表面，不是这条叙事主线。</p>
+            <h3>证据单元的作用</h3>
+            <p>retrieval benchmark 不会命中一整段无结构日志，它命中的是带 id、session 和文本信号的 evidence unit。</p>
+            <p>Capture 因此不是记录越多越好，而是让每个有价值事件都能成为后续 recall、verify 和 consolidation 的输入。</p>
           </div>
         </div>
         <div class="footer-line"><span>src/functions/observe.ts</span><span>src/functions/compress-synthetic.ts / src/hooks/*</span></div>
         <aside class="speaker-note">
-          <p>这里把 hooks 和 REST 降级为入口，重点放在管线。mem::observe 先做输入验证，再脱敏和去重；随后写入 session 范围的 KV。默认情况下不会调 LLM，而是用 buildSyntheticCompression 构造一个低成本压缩观察，再更新搜索索引。这个设计的好处是：系统一安装就能检索，LLM 能力是质量提升而不是可用性前提。</p>
+          <p>这一页把 capture 从工程入口转成科研对象。对 retrieval 来说，真正有意义的不是事件从哪个 hook 进来，而是它是否形成了可引用的 observation。agentmemory 给事件一个 session 边界，去掉重复，再用默认的 synthetic compress 抽出标题、类型、文件和短叙述，然后写入 observation store 并生成检索信号。输入检查和敏感字段处理仍在系统边界完成，但这里的主线是：raw event 怎样变成可评测 recall 的证据单元。</p>
         </aside>
       </section>
 
       <section class="slide rows" data-title="Compression internals">
         <div class="slide-header">
-          <div class="kicker">Compression Internals</div>
-          <h2>默认压缩是启发式：低成本、低置信、可检索</h2>
-          <p><span class="mono">buildSyntheticCompression</span> 把 raw event 变成最小可用的检索单元；LLM compression 是 opt-in 增强。</p>
+          <div class="kicker">Synthetic Compression</div>
+          <h2>启发式压缩：只抽确定字段，不做语义归纳</h2>
+          <p><span class="mono">buildSyntheticCompression</span> 把 raw tool event 变成最小可用的检索单元；更强语义归纳是 LLM 增强路径。</p>
         </div>
-        <div class="layout">
-          <div class="trace-grid">
-            <div class="trace-node">
-              <code>RawObservation</code>
-              <h3>输入边界</h3>
-              <p>来自 hook payload：hookType、toolName、toolInput、toolOutput、userPrompt、sessionId、timestamp。</p>
-            </div>
-            <div class="trace-arrow">→</div>
-            <div class="trace-node">
-              <code>inferType + extractFiles</code>
-              <h3>启发式推断</h3>
-              <p>hook failure 变 error；prompt 变 conversation；工具名归一化后识别 web/search/bash/edit/read/write。</p>
-            </div>
-            <div class="trace-arrow">→</div>
-            <div class="trace-node">
-              <code>CompressedObservation</code>
-              <h3>输出约束</h3>
-              <p>title 最多 80 字符，subtitle 120，narrative 由 prompt/input/output 拼接后截到 400 字符。</p>
-            </div>
+        <div class="layout wide-narrow">
+          <div class="path-stack">
+            <div class="path-row"><div class="index">1</div><div><strong>raw tool event</strong><span>toolName=Edit；toolInput.path=src/hooks/stop.ts；toolOutput=timeout 调整成功。</span></div><code>PostToolUse</code></div>
+            <div class="path-row"><div class="index">2</div><div><strong>extract fields</strong><span>确定工具类型、文件路径、输入摘要和短结果，不解释更大主题。</span></div><code>inferType</code></div>
+            <div class="path-row"><div class="index">3</div><div><strong>build title</strong><span>例如 “Edited src/hooks/stop.ts”；标题服务于排序和展示。</span></div><code>title</code></div>
+            <div class="path-row"><div class="index">4</div><div><strong>build narrative</strong><span>把 prompt、工具输入和输出剪成可检索的短叙述。</span></div><code>narrative ≤ 400</code></div>
+            <div class="path-row"><div class="index">5</div><div><strong>leave concepts empty</strong><span>没有 LLM 时不自动生成 concepts，只保留确定字段。</span></div><code>concepts=[]</code></div>
           </div>
-          <div class="compact-grid">
-            <div class="compact-card"><code>importance = 5</code><strong>中性重要度</strong><span>启发式不知道真实价值，只提供后续整理的默认优先级。</span></div>
-            <div class="compact-card"><code>confidence = 0.3</code><strong>低置信来源</strong><span>明确区分机器启发式摘要和更高质量的人/LLM 确认记忆。</span></div>
-            <div class="compact-card"><code>concepts = []</code><strong>不伪造主题</strong><span>synthetic path 只抽能确定的 files，不硬编概念词。</span></div>
-            <div class="compact-card"><code>AGENTMEMORY_AUTO_COMPRESS=true</code><strong>LLM opt-in</strong><span>开启后 PostToolUse 进入 mem::compress，成本与工具调用频率成正比。</span></div>
+          <div class="schema-card">
+            <h3>输出示例 <code>CompressedObservation</code></h3>
+            <div class="field-list">
+              <div class="field-row"><code>type</code><span>file_change</span></div>
+              <div class="field-row"><code>title</code><span>Edited src/hooks/stop.ts</span></div>
+              <div class="field-row"><code>files</code><span>["src/hooks/stop.ts"]</span></div>
+              <div class="field-row"><code>narrative</code><span>工具输入和结果形成短证据文本。</span></div>
+              <div class="field-row"><code>importance</code><span>5：中性优先级。</span></div>
+              <div class="field-row"><code>confidence</code><span>0.3：低置信启发式来源。</span></div>
+            </div>
           </div>
         </div>
         <div class="footer-line"><span>src/functions/compress-synthetic.ts</span><span>src/functions/observe.ts / src/config.ts</span></div>
         <aside class="speaker-note">
-          <p>这一页讲压缩内部。默认路径不是让模型解释每次工具调用，而是用 buildSyntheticCompression 做确定性转换。inferType 根据 hookType 和工具名分类；extractFiles 只从 file_path、path、file、pattern 等字段里抽文件线索；narrative 由用户 prompt、输入和输出拼接后截断到 400 字符。importance 固定 5，confidence 固定 0.3，表示这是可用但低置信的索引材料。如果用户设置 AGENTMEMORY_AUTO_COMPRESS=true，才会进入 mem::compress 的 LLM path。</p>
+          <p>这一页解释 compress 的默认策略。我们希望每次工具事件都能低成本进入检索系统，所以默认路径只抽确定字段：工具类型、文件路径、标题和短 narrative。它不会从一次编辑里自动推断“这是认证架构重构”这样的概念，因为那需要语义归纳，应该交给 LLM compression 或后面的 consolidation。importance 和 confidence 也提醒下游：这条证据可检索，但还不是高置信长期知识。这种设计让 capture 常开，而不把每次工具调用都变成模型成本。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="Index maintenance">
+      <section class="slide rows" data-title="检索信号构造">
         <div class="slide-header">
-          <div class="kicker">Index Maintenance</div>
-          <h2>索引维护：写入即更新，失败可重建</h2>
-          <p>BM25 是同步默认路径；vector 是 guarded best-effort；graph 来自长期结构和关系函数。</p>
+          <div class="kicker">Retrieval Signals</div>
+          <h2>一个 observation，三种检索入口</h2>
+          <p>BM25、vector、graph 不是工程冗余，而是分别覆盖 lexical、semantic 和 relational evidence。</p>
         </div>
         <div class="layout">
-          <div class="compact-grid">
-            <div class="compact-card">
-              <code>observe.ts</code>
-              <strong>synthetic observation</strong>
-              <span>kv.set 到 KV.observations 后立即 getSearchIndex().add，再调用 vectorIndexAddGuarded。</span>
+          <div class="retrieval">
+            <div class="retrieval-source">
+              <div class="score">BM25</div>
+              <h3>精确词与代码符号</h3>
+              <p>文件路径、函数名、错误码、命令参数、测试名这类字符串证据最适合 lexical matching。</p>
             </div>
-            <div class="compact-card">
-              <code>compress.ts</code>
-              <strong>LLM compressed obs</strong>
-              <span>mem::compress 生成更丰富的 CompressedObservation，同样写 KV、BM25、vector。</span>
+            <div class="retrieval-source">
+              <div class="score">Vector</div>
+              <h3>语义相似</h3>
+              <p>当 query 和 observation 不共享关键词时，embedding 帮助召回 paraphrase、意图相近的证据。</p>
             </div>
-            <div class="compact-card">
-              <code>remember.ts</code>
-              <strong>explicit Memory</strong>
-              <span>mem::remember 将 Memory 转成 observation 形状进入 BM25 和 vector。</span>
-            </div>
-            <div class="compact-card">
-              <code>rebuildIndex(kv)</code>
-              <strong>boot fallback</strong>
-              <span>索引为空时从 KV.memories 和每个 session 的 observations 重建。</span>
+            <div class="retrieval-source">
+              <div class="score">Graph</div>
+              <h3>实体与关系</h3>
+              <p>session、文件、概念和相邻证据形成扩展入口，用于跨步骤或跨会话问题。</p>
             </div>
           </div>
-          <div class="do-dont">
-            <div class="formula">
-              BM25: getSearchIndex().add(observation)<br />
-              vector: vectorIndexAddGuarded(id, sessionId, title + narrative)<br />
-              rebuild: clear BM25 + vector → batch reload from KV
-            </div>
-            <div class="panel">
-              <h3>可靠性策略</h3>
-              <p>vector 写入会检查 provider 是否存在、embedding 维度是否匹配、embed 是否抛错。失败只记录 warn 并返回 false，不阻塞 observation 或 memory 保存；BM25 和 KV 仍然可用，重启后 rebuild 会补齐可补的索引。</p>
-            </div>
+          <div class="panel">
+            <h3>检索信号的研究含义</h3>
+            <p>同一条 observation 同时暴露 lexical、semantic 和 relational views，实验才能比较哪类问题依赖哪类证据。没有向量时仍可用 keyword evidence；向量只是提高语义覆盖。</p>
           </div>
         </div>
         <div class="footer-line"><span>src/functions/search.ts</span><span>src/functions/observe.ts / compress.ts / remember.ts</span></div>
         <aside class="speaker-note">
-          <p>这一页讲维护而不是只讲三路检索概念。observe、compress 和 remember 都有 live-write 路径：先写 KV，再更新 BM25，再尝试 vector。vectorIndexAddGuarded 是关键可靠性边界：没有 provider、维度不匹配、embed 网络失败都会 soft-fail，不让保存失败。rebuildIndex 是恢复路径：索引为空时从 KV.memories 和所有 session observations 重建，同时清理 stale vector。graph 不在这里强行承诺实时更新，它来自 graph 和 relation 相关函数，在检索时作为补充流使用。</p>
+          <p>这一页从“索引维护”改成“检索信号构造”。科研上我们关心的是不同信号解决什么召回问题：BM25 擅长路径、符号和错误码；vector 擅长语义相似和换一种说法的查询；graph 擅长把 query entity 扩展到相关 session、文件或概念。agentmemory 对同一 observation 建多种入口，是为了让 recall 不只依赖一种相似度。没有 embedding 时，keyword evidence 仍然可以工作；有 embedding 时，语义覆盖会更好。</p>
         </aside>
       </section>
 
       <section class="slide rows" data-title="Hybrid retrieval algorithm">
         <div class="slide-header">
           <div class="kicker">Hybrid Retrieval</div>
-          <h2>算法核心：RRF_K=60，按可用检索流归一化</h2>
-          <p>BM25、vector、graph 先各自产生 rank，再用 reciprocal-rank fusion 合并。</p>
+          <h2>四步把候选变成 top-k evidence</h2>
+          <p>BM25、vector、graph 先各自产生候选，再用 RRF_K=60 的 rank fusion 得到可注入的证据列表。</p>
         </div>
         <div class="layout">
-          <div class="retrieval">
-            <div class="retrieval-source">
-              <div class="score">BM25</div>
-              <h3>limit × 2</h3>
-              <p>路径、符号、错误码、命令参数走 lexical rank；没有 embedding provider 时仍能工作。</p>
+          <div class="compact-grid">
+            <div class="compact-card">
+              <code>01 recall</code>
+              <strong>召回候选</strong>
+              <span>BM25 和 vector 各自返回候选 observation；graph 提供关系候选。</span>
             </div>
-            <div class="retrieval-source">
-              <div class="score">Vector</div>
-              <h3>limit × 2</h3>
-              <p>查询 embedding 失败则空结果；top 5 vector hits 还会触发 graph expansion。</p>
+            <div class="compact-card">
+              <code>02 expand</code>
+              <strong>实体扩展</strong>
+              <span>从 query 和高分语义候选抽实体，补入相邻文件、session、概念证据。</span>
             </div>
-            <div class="retrieval-source">
-              <div class="score">Graph</div>
-              <h3>entities + expansion</h3>
-              <p>先从 query 抽实体做 searchByEntities，再从 top vector chunks 做一跳扩展。</p>
+            <div class="compact-card">
+              <code>03 fuse</code>
+              <strong>rank fusion</strong>
+              <span>RRF_K=60 表示高排名证据加分更明显，低排名证据仍有小贡献。</span>
+            </div>
+            <div class="compact-card">
+              <code>04 diversify</code>
+              <strong>session 多样性</strong>
+              <span>合并后限制单个 session 占比，避免 top-k 被同一段历史淹没。</span>
             </div>
           </div>
-          <div class="do-dont">
-            <div class="formula">
-              combinedScore = Σ effectiveWeight(stream) × 1 / (60 + rank)<br />
-              default weights: BM25 0.4, vector 0.6, graph 0.3<br />
-              unavailable streams get weight 0; remaining weights renormalize
-            </div>
-            <div class="panel">
-              <h3>后处理不是装饰</h3>
-              <p>合并后先按 session diversify，默认每个 session 最多 3 条；retrievalDepth 至少 20；可选 rerank 只处理前 20 条，失败时回退到 RRF 顺序。</p>
-            </div>
+          <div class="panel">
+            <h3>为什么不用单一路径</h3>
+            <p>coding-agent 历史里同一个问题可能表现为文件名、错误输出、自然语言意图或跨会话模式。hybrid retrieval 让这些证据流都能投票，最后返回可排序的 observation evidence。</p>
           </div>
         </div>
-        <div class="footer-line"><span>src/state/hybrid-search.ts</span><span>src/functions/smart-search.ts / src/mcp/server.ts</span></div>
+        <div class="footer-line"><span>src/state/hybrid-search.ts</span><span>src/functions/smart-search.ts</span></div>
         <aside class="speaker-note">
-          <p>这一页讲算法而不是接口。tripleStreamSearch 对 BM25 和 vector 都取 limit 乘以 2 的候选，graph 由实体检索和 top vector observation 的一跳扩展组成。融合时 RRF_K 是 60；如果 vector 或 graph 不可用，它们的权重变成 0，剩余权重重新归一化。之后做 session diversification，避免同一会话占满 top-k。rerank 是可选小窗口步骤，失败时直接返回 RRF 结果，所以检索不会依赖 reranker 可用性。</p>
+          <p>这一页讲 retrieval algorithm 的核心机制，不讲接口差异。第一步各流召回候选：BM25 抓精确词，vector 抓语义相近，graph 抓关系扩展。第二步利用实体和高分候选做一跳扩展，补足跨 session 或跨文件线索。第三步用 reciprocal-rank fusion 合并，RRF_K=60 的直觉是：排名靠前的候选贡献更大，但多个弱信号一致时也能累积。第四步做 session diversification，避免 top-k 全来自一个 session。这样返回的不是一段长上下文，而是一组可评测证据。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="Retrieval interface contract">
+      <section class="slide rows" data-title="渐进式证据选择">
         <div class="slide-header">
-          <div class="kicker">Interface Contract</div>
-          <h2>检索接口：先 compact，再按需展开证据</h2>
-          <p>接口设计把“找候选”和“拿全文”分开，避免每次检索都填满上下文窗口。</p>
+          <div class="kicker">Evidence Selection</div>
+          <h2>先返回 compact top-k，再按需展开 observation</h2>
+          <p>检索系统先回答“哪些证据可能相关”，上下文注入再决定“哪些证据需要全文”。</p>
         </div>
         <div class="layout io-grid">
           <div class="io-card">
-            <h3>memory_recall <code>MCP</code></h3>
-            <p>面向直接上下文注入，要求非空 query，limit 默认 10。</p>
-            <div class="code-line">format: full | compact | narrative</div>
-            <div class="code-line">token_budget: positive integer</div>
-            <p>narrative format 可直接返回文本；其他格式以 JSON content 返回。</p>
+            <h3>1. Compact candidates</h3>
+            <p>top-k 先只返回 obsId、sessionId、title、type、score、timestamp。</p>
+            <div class="code-line">small evidence handles</div>
+            <p>这一步便于 agent 或人快速判断候选是否值得展开。</p>
           </div>
           <div class="io-card">
-            <h3>memory_smart_search <code>function / REST</code></h3>
-            <p>默认返回 compact result：obsId、sessionId、title、type、score、timestamp。</p>
-            <div class="code-line">query → hybrid compact results</div>
-            <div class="code-line">expandIds → full observations, max 20</div>
-            <p>内部函数和 REST 支持 query 或 expandIds；展开路径也应用 agent scope 过滤。</p>
+            <h3>2. Selective expansion</h3>
+            <p>只有被选中的 obsId 才展开为完整 observation、narrative 和来源信息。</p>
+            <div class="code-line">expand selected ids</div>
+            <p>展开从“候选列表”切换到“可引用证据”。</p>
           </div>
           <div class="io-card">
-            <h3>memory_smart_search <code>MCP</code></h3>
-            <p>MCP handler 当前仍要求 query 非空，再解析 CSV expandIds 并截到 20。</p>
-            <div class="code-line">expandIds: "obs_a, obs_b"</div>
-            <div class="code-line">limit: clamp 1..100</div>
-            <p>这是接口表面差异：MCP 适合先检索再展开，REST 可只传 expandIds。</p>
+            <h3>3. Budgeted context</h3>
+            <p>token budget 约束最终注入的证据数量和格式，避免把整段历史搬回 prompt。</p>
+            <div class="code-line">retrieve → inspect → expand</div>
+            <p>这让 recall evaluation 和实际上下文使用保持同一证据粒度。</p>
           </div>
         </div>
-        <div class="footer-line"><span>src/mcp/server.ts / src/mcp/tools-registry.ts</span><span>src/functions/smart-search.ts / src/triggers/api.ts</span></div>
+        <div class="footer-line"><span>src/functions/smart-search.ts</span><span>src/functions/search.ts</span></div>
         <aside class="speaker-note">
-          <p>这页把接口边界讲清楚。memory_recall 背后调用 mem::search，适合把结果直接注入 agent 上下文，所以支持 format 和 token_budget。memory_smart_search 背后调用 mem::smart-search，默认返回 compact results，调用方先看到 obsId、sessionId、title、type 和 score，需要证据全文时再用 expandIds 展开。内部函数和 REST 允许只传 expandIds；MCP handler 的 schema 和实现仍要求 query，所以这里不能把 REST 语义直接说成所有表面都一样。</p>
+          <p>这一页把“检索接口”改成“证据选择策略”。研究上重要的是，系统不要一开始就把全文塞回上下文，而是先返回 compact top-k：id、session、标题、类型和分数。调用方看完候选后，只展开真正需要的 observation。这样有两个好处：第一，top-k 可以直接对应 retrieval benchmark 的命中对象；第二，实际 agent 上下文只消耗必要证据，而不是全量历史。接口只是承载这个策略的表面，不是这条叙事的重点。</p>
         </aside>
       </section>
 
@@ -1370,207 +1348,192 @@
         </div>
         <div class="footer-line"><span>benchmark/LONGMEMEVAL.md</span><span>docs/benchmarks/2026-05-20-coding-agent-life-v1.md / benchmark/REAL-EMBEDDINGS.md</span></div>
         <aside class="speaker-note">
-          <p>这页必须克制。LongMemEval-S 的 95.2% 是 retrieval recall：gold session 是否进入 top 5。coding-agent-life 的 1.000 也是 retrieval 指标，而且语料很小。92% token saving 来自只返回 top-k 证据而不是加载全部历史。它们证明检索组件有效，但不能直接推出端到端任务一定成功。</p>
+          <p>这一页是全场最接近实验结果的部分，所以要严格限定指标含义。LongMemEval-S 的 95.2% R@5 表示 gold session 能否进入前五，不是最终 QA 正确率。coding-agent-life-v1 的 1.000 R@5 也是小规模 retrieval 指标，用来观察 coding agent 场景里的 temporal 和 multi-session recall。92% token saving 来自只返回 top-k evidence，而不是加载全部历史。它们证明检索层有效，但还不能推出 reader 一定正确使用证据。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="Summary reliability">
+      <section class="slide rows" data-title="Session-level compression">
         <div class="slide-header">
           <div class="kicker">Summarization</div>
-          <h2>会话总结：chunk=400、concurrency=6、失败阈值=50%</h2>
-          <p>summary 是 session 级压缩，不替代 observation 检索；它给长会话一个可读骨架。</p>
+          <h2>summary 是会话摘要，不是 gold evidence recall</h2>
+          <p>它写入 KV.summaries，用于 handoff、context 和后续整理；不会直接进入 recall index 或 knowledge graph。</p>
         </div>
         <div class="layout wide-narrow">
           <div class="path-stack">
-            <div class="path-row"><div class="index">1</div><div><strong>collect compressed observations</strong><span>只总结已经有 title 的 CompressedObservation。</span></div><code>kv.list</code></div>
-            <div class="path-row"><div class="index">2</div><div><strong>chunk large sessions</strong><span>CHUNK_SIZE_DEFAULT=400；SUMMARIZE_CHUNK_SIZE 可覆盖。</span></div><code>CHUNK_SIZE_DEFAULT</code></div>
-            <div class="path-row"><div class="index">3</div><div><strong>parallel batches</strong><span>CHUNK_CONCURRENCY_DEFAULT=6；每块失败后 retry once。</span></div><code>summarizeChunkWithRetry</code></div>
-            <div class="path-row"><div class="index">4</div><div><strong>skip-ratio gate</strong><span>跳过块超过 MAX_SKIP_RATIO=0.5 时整体失败，不产出半盲摘要。</span></div><code>MAX_SKIP_RATIO</code></div>
-            <div class="path-row"><div class="index">5</div><div><strong>parse / validate / score</strong><span>stripXmlWrappers 后解析 XML，用 SummaryOutputSchema 验证并计算 qualityScore。</span></div><code>scoreSummary</code></div>
+            <div class="path-row"><div class="index">1</div><div><strong>collect one session</strong><span>输入是同一个 session 下的 CompressedObservation。</span></div><code>sessionId</code></div>
+            <div class="path-row"><div class="index">2</div><div><strong>chunk=400</strong><span>长会话按 400 条 observation 切块，控制模型上下文规模。</span></div><code>CHUNK_SIZE_DEFAULT</code></div>
+            <div class="path-row"><div class="index">3</div><div><strong>concurrency=6</strong><span>多个 chunk 并行生成 partial summaries，服务于可扩展性。</span></div><code>CHUNK_CONCURRENCY_DEFAULT</code></div>
+            <div class="path-row"><div class="index">4</div><div><strong>reduce summary</strong><span>把 partial summaries 合成包含决策、文件和结果的会话摘要。</span></div><code>SessionSummary</code></div>
+            <div class="path-row"><div class="index">5</div><div><strong>store summary</strong><span>保存到 KV.summaries，供 context、handoff 和 consolidation 读取。</span></div><code>KV.summaries</code></div>
           </div>
           <div class="panel">
-            <h3>可靠性策略</h3>
-            <p>final summarize 也有两次 produce-and-parse 尝试；markdown code fence、前后缀文本会先被 stripXmlWrappers 清理，再进入 XML tag parser。</p>
-            <p>输出必须通过 schema validation，成功后写入 KV.summaries 并记录 audit；无 provider 时明确返回 no_provider。</p>
+            <h3>它不会直接构建什么</h3>
+            <p>summary 本身不会写入 BM25 / vector index，所以 memory_recall 的命中对象仍主要是 observation 和 explicit memory。</p>
+            <p>summary 也不会直接更新 knowledge graph；graph 需要单独的 graph extraction，把 observations 送进图抽取流程。</p>
           </div>
         </div>
         <div class="footer-line"><span>src/functions/summarize.ts</span><span>src/prompts/summary.ts / src/eval/quality.ts</span></div>
         <aside class="speaker-note">
-          <p>这里把总结当作可靠性问题，而不是简单调用一次模型。小会话走单次总结；大会话默认每 400 条 observation 一块，并发 6 个 chunk 调用。每个 chunk 解析失败、provider error 或网络失败都会 retry once；如果失败块超过 50%，函数直接报 too_many_chunks_skipped。reduce 阶段只合并解析成功的 partial summaries。最终响应还会 strip XML wrapper、schema validation，并计算 qualityScore，所以 summary 是结构化产物，而不是不可控文本。</p>
+          <p>这一页要把 summary 的作用讲清楚。mem::summarize 的输入是一整个 session 的 compressed observations，输出是 SessionSummary，并写到 KV.summaries。它的直接用途是 handoff、mem::context 里的 compact context block，以及后续 consolidation 或 skill extraction 的输入。它不会直接写 BM25 或 vector index，所以不是 memory_recall 的主要命中对象；它也不会直接更新 knowledge graph，graph 需要单独把 observations 送进 graph extraction。这样 summary 就不会和 observation recall、memory、graph 混在一起。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="Consolidation">
+      <section class="slide rows" data-title="Consolidation mechanism">
         <div class="slide-header">
           <div class="kicker">Consolidation</div>
-          <h2>长期整理：从 observation cluster 到 Memory</h2>
-          <p>consolidation 把多次观察中的重复模式整理成可演化的长期记忆。</p>
+          <h2>consolidate：从多条 evidence 形成长期 Memory</h2>
+          <p>它不是再写一个 session 摘要，而是把跨 session 的重复证据归纳为有来源、可演化的长期结论。</p>
         </div>
-        <div class="layout schema-map">
-          <div class="schema-card">
-            <h3>输入 <code>observations</code></h3>
-            <div class="field-list">
-              <div class="field-row"><code>minObservations</code><span>默认 10；候选不足时返回 insufficient_observations。</span></div>
-              <div class="field-row"><code>importance ≥ 5</code><span>只把相对重要的观察放进候选集合。</span></div>
-              <div class="field-row"><code>concept groups ≥ 3</code><span>按 concept 聚类，至少 3 条观察才进入 LLM 总结。</span></div>
-              <div class="field-row"><code>top 8 / group</code><span>每组按 importance 取前 8 条，限制上下文规模。</span></div>
-              <div class="field-row"><code>MAX_LLM_CALLS=10</code><span>每次 consolidation 最多处理 10 个概念组。</span></div>
-            </div>
+        <div class="layout wide-narrow">
+          <div class="path-stack">
+            <div class="path-row"><div class="index">1</div><div><strong>candidate observations</strong><span>收集可作为长期模式候选的 observation evidence。</span></div><code>observations</code></div>
+            <div class="path-row"><div class="index">2</div><div><strong>concept grouping</strong><span>按 concepts、文件、错误类型或任务语境聚成候选主题。</span></div><code>groups</code></div>
+            <div class="path-row"><div class="index">3</div><div><strong>top evidence</strong><span>每组保留最能支持结论的少量来源，控制综合上下文。</span></div><code>top evidence</code></div>
+            <div class="path-row"><div class="index">4</div><div><strong>LLM synthesis</strong><span>生成 pattern、bug、workflow、fact 等长期记忆草案。</span></div><code>synthesize</code></div>
+            <div class="path-row"><div class="index">5</div><div><strong>versioned Memory</strong><span>保存 sourceObservationIds；同一主题后续可以产生新版本。</span></div><code>Memory</code></div>
           </div>
-          <div class="schema-arrow">→</div>
-          <div class="schema-card">
-            <h3>输出 <code>Memory</code></h3>
-            <div class="field-list">
-              <div class="field-row"><code>type</code><span>pattern、preference、architecture、bug、workflow、fact。</span></div>
-              <div class="field-row"><code>sourceObservationIds</code><span>长期记忆仍能追溯回原始观察。</span></div>
-              <div class="field-row"><code>version</code><span>同标题记忆可 evolve，新版本 supersedes 旧版本。</span></div>
-              <div class="field-row"><code>project scope</code><span>项目级 consolidation 只演化同项目记忆，避免污染。</span></div>
-              <div class="field-row"><code>audit</code><span>remember/evolve 操作写 audit，detail 标记 create_memory 或 evolve_memory。</span></div>
-            </div>
+          <div class="panel">
+            <h3>和 summarize 的区别</h3>
+            <p>summarize 压缩一个 session，产物帮助理解那段历史；consolidate 跨多段历史找重复模式，产物会影响未来行为。</p>
+            <p>长期 Memory 的可信度来自证据集合，而不是一次生成文本本身。</p>
           </div>
         </div>
         <div class="footer-line"><span>src/functions/consolidate.ts</span><span>src/types.ts: Memory</span></div>
         <aside class="speaker-note">
-          <p>Consolidation 回答“怎么从材料变成知识”。代码默认要求至少 10 条候选 observation，只保留 importance 大于等于 5 的观察，按 concept 分组，并且每组至少 3 条才进入模型。每组只取 importance 最高的 8 条，每次运行最多 10 次 LLM 调用。Memory 类型被限制在六类：pattern、preference、architecture、bug、workflow、fact。关键是 sourceObservationIds、version 和 project scope：长期记忆不是无来源结论，而是可追溯、可演化、可限制作用域的结构化记录。</p>
+          <p>这一页讲 memory formation 的机制。consolidation 的输入是一组候选 observations，不是一段 transcript。系统先按概念、文件、错误类型或任务语境分组，再从每组选择最能支持结论的 top evidence，之后才让 LLM 综合成长期 Memory。输出要保留 sourceObservationIds，并且可以随新证据演化为新版本。这个流程的研究意义在于：长期记忆不是一次性生成的摘要，而是由多条可追溯证据支撑的归纳结论。</p>
         </aside>
       </section>
 
-      <section class="slide rows" data-title="Long-term structure">
+      <section class="slide rows" data-title="Consolidation example">
         <div class="slide-header">
-          <div class="kicker">Long-Term Structure</div>
-          <h2>“梳理”不是只总结，而是分层放置知识</h2>
-          <p>不同知识进入不同生命周期层：热的保留、稳的固化、错的修正、敏感的删除。</p>
+          <div class="kicker">Consolidation Example</div>
+          <h2>多次 retry / auth / file-change 观察如何形成一条 memory</h2>
+          <p>consolidation 的价值在于把分散事件转成未来可执行的经验，而不是保留每次失败的长日志。</p>
         </div>
         <div class="layout narrow-wide">
           <div class="panel">
-            <h3>层次不是装饰</h3>
-            <p>summary 给会话可读骨架，memory 给长期事实和模式，lesson 给可复用经验，slot 给小而稳定的上下文，audit/verify/forget 给治理闭环。</p>
+            <h3>候选 evidence</h3>
+            <div class="list">
+              <div class="bullet">obs_101：API retry 后仍然 401，错误来自过期 Authorization header。</div>
+              <div class="bullet">obs_184：刷新 token 后同一请求成功，失败与 stale header 相关。</div>
+              <div class="bullet">obs_229：修改 src/auth/client.ts，在 retry 前重新读取 token。</div>
+              <div class="bullet">obs_301：测试补充了 “401 then refresh then retry” 路径。</div>
+            </div>
           </div>
           <div class="layer-stack">
-            <div class="layer-row"><strong>Observation</strong><span>事件级证据，检索和回放的最小来源。</span><code>KV.observations</code></div>
-            <div class="layer-row"><strong>Session Summary</strong><span>会话级压缩，便于 handoff 和人读。</span><code>KV.summaries</code></div>
-            <div class="layer-row"><strong>Memory</strong><span>长期模式、偏好、架构事实和 bug 经验。</span><code>KV.memories</code></div>
-            <div class="layer-row"><strong>Lesson</strong><span>可强化、可衰减的经验片段。</span><code>lesson_save</code></div>
-            <div class="layer-row"><strong>Slot</strong><span>pinned 的项目/全局上下文，有尺寸限制。</span><code>src/functions/slots.ts</code></div>
-            <div class="layer-row"><strong>Governance</strong><span>verify、audit、forget 维持来源、责任和删除能力。</span><code>audit / verify</code></div>
+            <div class="layer-row"><strong>concept grouping</strong><span>这些 observations 被归到 auth retry / stale header 主题。</span><code>auth-retry</code></div>
+            <div class="layer-row"><strong>top evidence</strong><span>选择错误、修复和测试三类来源作为最小支持集。</span><code>obs_101, obs_229, obs_301</code></div>
+            <div class="layer-row"><strong>LLM synthesis</strong><span>归纳出未来修改 auth client 时应先刷新 token 再 retry。</span><code>workflow / bug</code></div>
+            <div class="layer-row"><strong>versioned Memory</strong><span>Memory 保存结论、适用项目和 sourceObservationIds。</span><code>v1</code></div>
+            <div class="layer-row"><strong>future recall</strong><span>下次遇到 401 retry 问题时，检索可直接找回这条长期经验。</span><code>top-k evidence</code></div>
           </div>
         </div>
-        <div class="footer-line"><span>src/functions/slots.ts</span><span>src/functions/verify.ts / src/functions/audit.ts / src/functions/forget.ts</span></div>
+        <div class="footer-line"><span>example</span><span>candidate observations → concept grouping → top evidence → Memory</span></div>
         <aside class="speaker-note">
-          <p>这页解释“梳理”的含义。总结只是其中一层：它压缩一个 session，但不会自动变成长期原则。Memory 是跨观察的长期结论，Lesson 是可强化经验，Slot 是少量稳定上下文，Governance 层让这些状态可验证、可审计、可删除。这样长期记忆不会只是越来越大的文本文件，而是有生命周期位置的知识结构。</p>
+          <p>这一页用例子说明前一页的机制。单看 obs_101，它只是一次 401 失败；单看 obs_229，它只是一次文件修改；单看 obs_301，它只是一次测试补充。consolidation 把这些 evidence 放在一起，发现共同主题是 auth retry 中的 stale header，然后形成一条未来可执行的长期记忆：遇到 401 retry 路径时，要刷新 token 并覆盖测试。这个例子也说明 sourceObservationIds 为什么重要，因为我们需要回到失败、修复和测试三类证据来判断结论是否成立。</p>
         </aside>
       </section>
 
       <section class="slide rows" data-title="Governance">
         <div class="slide-header">
           <div class="kicker">Governance</div>
-          <h2>治理闭环：结论必须能回到证据，也必须能删除</h2>
-          <p>长期记忆的可靠性来自可验证来源、可查询审计和一致的索引清理。</p>
+          <h2>治理闭环：结论必须能回到证据，也必须能撤销</h2>
+          <p>长期记忆的可靠性来自三件事：保存来源、按来源核对、在证据过期或错误时删除。</p>
         </div>
         <div class="layout">
           <div class="trace-grid">
             <div class="trace-node">
               <code>sourceObservationIds</code>
-              <h3>证据链</h3>
-              <p>Memory 保存来源 observation id；consolidation 和 explicit remember 都可以携带这些引用。</p>
+              <h3>保留来源</h3>
+              <p>Memory 保存支持它的 observation ids；长期结论不脱离证据集合。</p>
             </div>
             <div class="trace-arrow">→</div>
             <div class="trace-node">
-              <code>mem::verify</code>
-              <h3>验证</h3>
-              <p>verify 读取 memory 后按 sourceObservationIds 找回 citation、session project、status 和 timestamp。</p>
+              <code>verify</code>
+              <h3>回查证据</h3>
+              <p>需要核对时，按来源 id 找回原 observation、session 和时间。</p>
             </div>
             <div class="trace-arrow">→</div>
             <div class="trace-node">
               <code>forget / delete</code>
-              <h3>撤销</h3>
-              <p>forget 和 governance-delete 删除 KV、access log、BM25、vector，并在删除后 flush index save。</p>
+              <h3>撤销结论</h3>
+              <p>当证据不应继续影响未来行为时，删除对应 memory 或 observation。</p>
             </div>
           </div>
-          <div class="governance">
-            <div class="panel">
-              <h3>Audit</h3>
-              <p>recordAudit / safeAudit 记录 remember、evolve、compress、forget、delete 等操作，保留 action、reason、target ids。</p>
-            </div>
-            <div class="panel">
-              <h3>Scope</h3>
-              <p>project scope 防止跨项目演化；agent scope isolation 在 search 和 smart-search 路径上 fail-closed。</p>
-            </div>
-            <div class="panel">
-              <h3>Deletion</h3>
-              <p>删除不是只删一行：还要删除访问日志、搜索索引和向量索引，否则旧证据会从检索路径复活。</p>
-            </div>
+          <div class="panel">
+            <h3>研究含义</h3>
+            <p>可追溯来源让 consolidation 的输出可以被人工或 evaluator 复核；可撤销能力让长期记忆不会因为一次错误归纳而永久污染后续行为。</p>
           </div>
         </div>
-        <div class="footer-line"><span>src/functions/verify.ts / governance.ts</span><span>src/functions/remember.ts / audit.ts / search.ts</span></div>
+        <div class="footer-line"><span>src/functions/verify.ts</span><span>src/functions/forget.ts / governance.ts</span></div>
         <aside class="speaker-note">
-          <p>这页是长期记忆和普通 prompt cache 的关键区别。Memory 不是无来源的自然语言结论；sourceObservationIds 让它能回到具体 observation。mem::verify 会把 memory 的 citation 找回来，并显示 session project、status、timestamp 等来源信息。审计层记录谁做了 remember、evolve、compress、forget 或 delete。删除路径也不是只删 KV 行，还要清理 access log、BM25、vector index，并 flush 持久化，避免已经删除的记忆从索引快照里重新出现。</p>
+          <p>这一页把治理压到最小必要闭环。长期 Memory 必须保存 sourceObservationIds，因为没有来源就无法判断它是不是合理归纳。verify 的作用是把结论带回原始 observation 和 session，让人或 evaluator 可以检查证据是否支持结论。forget 和 delete 则处理另一类问题：当来源不该继续使用、结论过期或归纳错误时，系统必须能撤销它。对科研叙事来说，治理不是工程附录，而是让 memory formation 可复核的条件。</p>
         </aside>
       </section>
 
       <section class="slide rows" data-title="边界与成本">
         <div class="slide-header">
           <div class="kicker">Limits & Cost</div>
-          <h2>边界：检索系统有效，不等于记忆永远正确</h2>
-          <p>科研分享里需要把可测能力、成本来源和失败模式讲清楚。</p>
+          <h2>边界：retrieval recall ≠ reader correctness ≠ task success</h2>
+          <p>科研分享里需要把可测能力、生成质量和模型成本分开声明。</p>
         </div>
         <div class="layout cost-grid">
           <div class="cost-card">
             <div class="label">retrieval</div>
-            <h3>可评测的是找回证据</h3>
-            <p>LongMemEval-S 的 R@5 衡量 gold session 是否进入 top-k；reader 是否正确使用证据是另一个问题。</p>
+            <h3>R@k 只衡量证据是否回来</h3>
+            <p>LongMemEval-S 的 R@5 是 gold session 是否进入 top-k，不是最终回答正确率。</p>
           </div>
           <div class="cost-card">
-            <div class="label">LLM cost</div>
-            <h3>默认路径不烧模型</h3>
-            <p>capture 默认 synthetic compression；LLM 成本主要来自 auto-compress、summarize、consolidate 和可选 rerank。</p>
+            <div class="label">reader</div>
+            <h3>reader 仍可能误读证据</h3>
+            <p>证据进上下文后，agent 是否正确引用、推理和执行，是另一层评测。</p>
           </div>
           <div class="cost-card">
-            <div class="label">freshness</div>
-            <h3>索引和 KV 可能短暂不一致</h3>
-            <p>vector 写失败会降级；删除路径需要 flush index save；rebuildIndex 是恢复和补齐机制。</p>
+            <div class="label">formation</div>
+            <h3>长期记忆仍需复核</h3>
+            <p>consolidation 能归纳模式，但生成式结论仍要依赖来源核对和撤销机制。</p>
           </div>
           <div class="cost-card">
-            <div class="label">quality</div>
-            <h3>总结和整理依赖生成质量</h3>
-            <p>summary 有 schema 和 quality score；consolidation 有 evidence cap 和 audit，但仍需要 verify 和 forget 闭环。</p>
+            <div class="label">cost</div>
+            <h3>默认 capture 不调用 LLM</h3>
+            <p>模型成本主要来自 auto-compress、summarize、consolidate 和可选 rerank。</p>
           </div>
         </div>
         <div class="footer-line"><span>boundary conditions</span><span>retrieval ≠ reader correctness ≠ task success</span></div>
         <aside class="speaker-note">
-          <p>这一页防止过度声明。agentmemory 的强项是把历史事件变成可检索证据，并且这个 retrieval 能被 benchmark。它不保证下游 agent 一定读懂证据，也不保证 LLM 生成的 summary 或 consolidation 永远正确。成本上，默认 capture 不调用 LLM；真正的模型成本来自 opt-in auto-compress、summarize、consolidate 和可选 rerank。可靠性上，vector failure 是可降级的，删除需要同步索引，长期结论需要 verify 和 forget 闭环。</p>
+          <p>这一页是边界声明。agentmemory 当前最强、最可量化的是 retrieval：历史证据能不能被找回来。reader correctness 是下一层问题，即 agent 拿到证据后是否读懂并正确使用。task success 又更远，还受到代码执行、测试覆盖和外部环境影响。成本也要分开：默认 capture 使用启发式压缩，不调用 LLM；只有 auto-compress、summarize、consolidate 和可选 rerank 这些生成或重排序步骤才产生模型成本。这样声明可以避免把 retrieval 指标夸大成端到端智能。</p>
         </aside>
       </section>
 
       <section class="slide rows" data-title="Takeaway">
         <div class="slide-header">
           <div class="kicker">Takeaway</div>
-          <h2>何时该记，何时该搜，何时该总结</h2>
-          <p>给科研听众的结论：agentmemory 是一个可评测的 retrieval + lifecycle 系统。</p>
+          <h2>何时该记，何时该搜，何时该形成长期记忆</h2>
+          <p>agentmemory 的科研主线：把历史切成证据，用检索找回证据，再从重复证据中形成 memory。</p>
         </div>
         <div class="layout practice">
           <div class="panel">
             <div class="big-num">01</div>
             <h3>该记</h3>
-            <p>当信息未来会改变 agent 行为，并且能绑定到来源时，记录成 observation 或显式 memory。</p>
-            <div class="code-line">capture / remember</div>
+            <p>当事件未来会改变 agent 行为，并且能绑定到 session 与来源时，记录成 observation。</p>
+            <div class="code-line">capture evidence</div>
           </div>
           <div class="panel">
             <div class="big-num">02</div>
             <h3>该搜</h3>
-            <p>当问题依赖历史决策、文件变更、错误处理或跨 session 事实时，先 retrieve，再生成。</p>
-            <div class="code-line">retrieve top-k evidence</div>
+            <p>当问题依赖历史决策、文件变更、错误处理或跨 session 事实时，先 retrieve top-k evidence。</p>
+            <div class="code-line">retrieve before reasoning</div>
           </div>
           <div class="panel">
             <div class="big-num">03</div>
-            <h3>该总结</h3>
-            <p>当单个 session 过长或需要交接时做 summary；当重复模式出现时再 consolidate 成长期记忆。</p>
-            <div class="code-line">summarize / consolidate</div>
+            <h3>该形成记忆</h3>
+            <p>当多次 evidence 指向同一模式时，再 consolidate 成带来源、可演化的长期 Memory。</p>
+            <div class="code-line">consolidate repeated evidence</div>
           </div>
         </div>
-        <div class="footer-line"><span>closing</span><span>Capture → Compress → Index → Retrieve → Summarize → Consolidate</span></div>
+        <div class="footer-line"><span>closing</span><span>Capture → Compress → Retrieve → Summarize → Consolidate</span></div>
         <aside class="speaker-note">
-          <p>结尾把系统变成操作原则。该记的是有来源、会影响未来行为的事件；该搜的是历史证据，而不是让 agent 重新猜；该总结的是长会话和交接上下文；该 consolidation 的是多次出现的模式。最终 takeaway 是：agentmemory 不是单点工具，而是一个可以做 retrieval 评测、也能做生命周期治理的长期记忆系统。</p>
+          <p>结尾回到三条操作原则。第一，记的对象不是所有文本，而是未来可能改变行为的 evidence。第二，遇到历史相关问题时应该先搜证据，再让 agent 推理，而不是让它重新猜。第三，长期记忆不应来自单次事件，而应来自多条 observation 的重复模式，并且保留 sourceObservationIds。用这个视角看，agentmemory 是一个 retrieval 加 memory formation 系统：它能把 coding agent 的历史变成可评测的 recall 问题，也能把重复证据整理成可复核的长期知识。</p>
         </aside>
       </section>
     </div>

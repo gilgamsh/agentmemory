@@ -885,6 +885,82 @@
       overflow-wrap: anywhere;
     }
 
+    .artifact-map {
+      display: grid;
+      grid-template-columns: minmax(0, 1.16fr) minmax(0, 0.84fr);
+      gap: 18px;
+      min-height: 0;
+    }
+    .artifact-stack {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-height: 0;
+    }
+    .artifact-row {
+      display: grid;
+      grid-template-columns: 160px 1fr 118px;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      background: #111416;
+      padding: 13px 14px;
+      min-height: 74px;
+    }
+    .artifact-row.primary {
+      border-color: rgba(100,211,138,0.52);
+      background: linear-gradient(180deg, rgba(100,211,138,0.11), rgba(255,255,255,0.025));
+    }
+    .artifact-row.branch {
+      border-style: dashed;
+    }
+    .artifact-row strong {
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.15;
+    }
+    .artifact-row span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.36;
+    }
+    .artifact-row code {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+    .artifact-aside {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 14px;
+      align-content: start;
+    }
+    .artifact-aside p { font-size: 16px; line-height: 1.42; }
+    .distinction {
+      border: 1px solid rgba(240,179,90,0.48);
+      border-radius: 8px;
+      background: rgba(240,179,90,0.065);
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+    .distinction .label {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .distinction code {
+      color: #f3f0e8;
+      font-family: var(--mono);
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
     .footer-line {
       position: absolute;
       left: 54px;
@@ -1080,9 +1156,48 @@
             </div>
           </div>
         </div>
-        <div class="footer-line"><span>mental model</span><span>event → evidence unit → retrieved evidence → session summary → long-term memory</span></div>
+        <div class="footer-line"><span>mental model</span><span>下一页：observation / index / summary / memory / graph 关系</span></div>
         <aside class="speaker-note">
-          <p>这页专门解决术语混淆。这里不是说有五种“记忆粒度”，而是说生命周期里有五种不同产物边界。capture 产生带来源的事件证据；compress 把单条事件变成检索系统能排序的单元；retrieve 返回 top-k evidence；summarize 面向一个 session，产物是会话摘要；consolidate 才是长期记忆形成，它需要跨多条 observation 找重复模式，再生成有来源的长期 Memory。边界分清之后，评测也更清楚：retrieval 先评证据能不能回来，summary 和 consolidation 要另设质量标准。</p>
+          <p>这页专门解决术语混淆。这里不是说有五种“记忆粒度”，而是说生命周期里有五种不同产物边界。capture 产生带来源的事件证据；compress 把单条事件变成检索系统能排序的单元；retrieve 返回 top-k evidence；summarize 面向一个 session，产物是会话摘要；consolidate 才是长期记忆形成，它需要跨多条 observation 找重复模式，再生成有来源的长期 Memory。下一页会把 observation、检索索引、summary、memory 和 knowledge graph 的生成关系摊开，强调哪些默认自动、哪些需要额外整理。边界分清之后，评测也更清楚：retrieval 先评证据能不能回来，summary 和 consolidation 要另设质量标准。</p>
+        </aside>
+      </section>
+
+      <section class="slide rows" data-title="从 observation 到各类产物">
+        <div class="slide-header">
+          <div class="kicker">Artifact Map</div>
+          <h2>从 observation 到各类产物</h2>
+          <p>observation 是证据层；索引、摘要、长期记忆和图谱是在不同触发点上服务不同问题的产物。</p>
+        </div>
+        <div class="layout artifact-map">
+          <div class="artifact-stack">
+            <div class="artifact-row primary"><strong>observation</strong><span>自动 capture 把事件保存成带 session、来源和时间的证据，后续产物都从这里取材。</span><code>evidence</code></div>
+            <div class="artifact-row primary"><strong>BM25 / vector index</strong><span>observation 写入后更新检索索引，让 recall 可以按问题排序并返回 top-k evidence。</span><code>default</code></div>
+            <div class="artifact-row branch"><strong>summary</strong><span>从一个 session 的 observations 生成摘要，用于 handoff、context 和后续整理。</span><code>session</code></div>
+            <div class="artifact-row branch"><strong>memory</strong><span>来自显式 remember 或 consolidation，从多条 evidence 归纳长期结论，保存后可被检索。</span><code>long-term</code></div>
+            <div class="artifact-row branch"><strong>knowledge graph</strong><span>graph extraction 从 observations 抽取实体和关系，形成关系索引；不是逐条写入时默认同步生成。</span><code>relations</code></div>
+          </div>
+          <div class="panel artifact-aside">
+            <h3>核心区分</h3>
+            <div class="distinction">
+              <div>
+                <div class="label">默认自动</div>
+                <code>event → observation → BM25/vector</code>
+              </div>
+              <div>
+                <div class="label">需要额外整理</div>
+                <code>observation → summary / memory / knowledge graph</code>
+              </div>
+            </div>
+            <div class="list">
+              <div class="bullet">索引层服务“找回证据”，不是新结论。</div>
+              <div class="bullet">summary 是 session 层摘要，不直接进入 recall index 或 graph。</div>
+              <div class="bullet">memory 和 graph 需要显式动作、调度或提取流程。</div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-line"><span>data artifacts</span><span>evidence first, derived artifacts later</span></div>
+        <aside class="speaker-note">
+          <p>这一页是总图区分。默认自动链路是 event 进入 capture，形成 observation，并在写入时更新 BM25 和 vector index；这个链路只保证证据可被搜索。summary、memory 和 knowledge graph 都不是每条 observation 写入时同步生成的同一种东西。summary 面向一个 session，服务 handoff、context 和后续整理，不直接写 recall index 或 graph。memory 可以来自显式 remember，也可以来自 consolidation，它把多条 evidence 归纳成长期结论，保存后才可以进入检索。knowledge graph 则依赖 graph extraction，从 observations 抽实体和关系，形成关系索引；是否运行取决于相应整理流程和配置。</p>
         </aside>
       </section>
 
@@ -1320,10 +1435,10 @@
         </aside>
       </section>
 
-      <section class="slide rows" data-title="Retrieval evaluation">
+      <section class="slide rows" data-title="证据命中评测">
         <div class="slide-header">
           <div class="kicker">Evaluation</div>
-          <h2>检索评测：只声明 retrieval，不夸大端到端 QA</h2>
+          <h2>R@k 衡量相关历史能否进入 top-k</h2>
           <p>现有数字证明的是“能否找回证据”，不是“agent 一定做对任务”。</p>
         </div>
         <div class="layout evidence-grid">
@@ -1352,10 +1467,10 @@
         </aside>
       </section>
 
-      <section class="slide rows" data-title="Session-level compression">
+      <section class="slide rows" data-title="Session summary">
         <div class="slide-header">
           <div class="kicker">Summarization</div>
-          <h2>summary 是会话摘要，不是 gold evidence recall</h2>
+          <h2>summary：session 结束后的交接摘要</h2>
           <p>它写入 KV.summaries，用于 handoff、context 和后续整理；不会直接进入 recall index 或 knowledge graph。</p>
         </div>
         <div class="layout wide-narrow">
@@ -1400,7 +1515,7 @@
         </div>
         <div class="footer-line"><span>src/functions/consolidate.ts</span><span>src/types.ts: Memory</span></div>
         <aside class="speaker-note">
-          <p>这一页讲 memory formation 的机制。consolidation 的输入是一组候选 observations，不是一段 transcript。系统先按概念、文件、错误类型或任务语境分组，再从每组选择最能支持结论的 top evidence，之后才让 LLM 综合成长期 Memory。输出要保留 sourceObservationIds，并且可以随新证据演化为新版本。这个流程的研究意义在于：长期记忆不是一次性生成的摘要，而是由多条可追溯证据支撑的归纳结论。</p>
+          <p>这一页讲 memory formation 的机制。consolidation 的输入是一组候选 observations，不是一段 transcript。系统先按概念、文件、错误类型或任务语境分组，再从每组选择最能支持结论的 top evidence，之后才让 LLM 综合成长期 Memory。也要提醒听众：Memory 不是每条 observation 写入时自动生成；它来自显式 remember 或 consolidation 这类整理流程。输出要保留 sourceObservationIds，并且可以随新证据演化为新版本。这个流程的研究意义在于：长期记忆不是一次性生成的摘要，而是由多条可追溯证据支撑的归纳结论。</p>
         </aside>
       </section>
 
@@ -1541,7 +1656,7 @@
 
   <nav class="controls" aria-label="slide controls">
     <button id="prev" type="button" aria-label="上一页">‹</button>
-    <div class="page-indicator" id="pageIndicator">1 / 17</div>
+    <div class="page-indicator" id="pageIndicator">1 / 18</div>
     <button id="next" type="button" aria-label="下一页">›</button>
     <button id="notesToggle" type="button" aria-label="备注">N</button>
     <button id="fullToggle" type="button" aria-label="全屏">F</button>

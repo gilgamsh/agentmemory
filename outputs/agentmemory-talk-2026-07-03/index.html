@@ -1162,42 +1162,36 @@
         </aside>
       </section>
 
-      <section class="slide rows" data-title="从 observation 到各类产物">
+      <section class="slide rows" data-title="内容对象、检索索引和派生 store">
         <div class="slide-header">
           <div class="kicker">Artifact Map</div>
-          <h2>从 observation 到各类产物</h2>
-          <p>observation 是证据层；索引、摘要、长期记忆和图谱是在不同触发点上服务不同问题的产物。</p>
+          <h2>内容对象、检索索引和派生 store 要分开看</h2>
+          <p>同一个底层 state 里有不同逻辑角色：可返回内容、检索信号、交接摘要和关系索引。</p>
         </div>
         <div class="layout artifact-map">
           <div class="artifact-stack">
-            <div class="artifact-row primary"><strong>observation</strong><span>自动 capture 把事件保存成带 session、来源和时间的证据，后续产物都从这里取材。</span><code>evidence</code></div>
-            <div class="artifact-row primary"><strong>BM25 / vector index</strong><span>observation 写入后更新检索索引，让 recall 可以按问题排序并返回 top-k evidence。</span><code>default</code></div>
-            <div class="artifact-row branch"><strong>summary</strong><span>从一个 session 的 observations 生成摘要，用于 handoff、context 和后续整理。</span><code>session</code></div>
-            <div class="artifact-row branch"><strong>memory</strong><span>来自显式 remember 或 consolidation，从多条 evidence 归纳长期结论，保存后可被检索。</span><code>long-term</code></div>
-            <div class="artifact-row branch"><strong>knowledge graph</strong><span>graph extraction 从 observations 抽取实体和关系，形成关系索引；不是逐条写入时默认同步生成。</span><code>relations</code></div>
+            <div class="artifact-row primary"><strong>Recall content</strong><span>observation 和长期 memory 是 recall 最终返回的主要对象：一个是事件证据，一个是带来源的长期结论。</span><code>content</code></div>
+            <div class="artifact-row primary"><strong>Retrieval signals</strong><span>BM25、vector、relation store / graph expansion 共同帮助排序和扩展候选；它们是索引信号，不是 memory。</span><code>rank + expand</code></div>
+            <div class="artifact-row branch"><strong>Session handoff</strong><span>summary 写入 KV.summaries，用于 handoff、context、recap 和后续 consolidation，不直接作为 top-k recall 命中对象。</span><code>derived store</code></div>
           </div>
           <div class="panel artifact-aside">
             <h3>核心区分</h3>
             <div class="distinction">
               <div>
-                <div class="label">默认自动</div>
-                <code>event → observation → BM25/vector</code>
-              </div>
-              <div>
-                <div class="label">需要额外整理</div>
-                <code>observation → summary / memory / knowledge graph</code>
+                <div class="label">BM25 definition</div>
+                <code>BM25 = keyword ranking over title / narrative / facts / concepts / files.</code>
               </div>
             </div>
             <div class="list">
-              <div class="bullet">索引层服务“找回证据”，不是新结论。</div>
-              <div class="bullet">summary 是 session 层摘要，不直接进入 recall index 或 graph。</div>
-              <div class="bullet">memory 和 graph 需要显式动作、调度或提取流程。</div>
+              <div class="bullet">knowledge graph 是 relation store：从 observations 抽实体/关系；retrieval 可用它做 graph expansion，但它不是 observation 写入时默认同步生成。</div>
+              <div class="bullet">summary 是 session 层派生 store，不进入 BM25/vector，也不直接更新 relation store。</div>
+              <div class="bullet">retrieval 可以组合 BM25、vector、graph；最后命中的内容对象仍主要是 observation 和 memory。</div>
             </div>
           </div>
         </div>
-        <div class="footer-line"><span>data artifacts</span><span>evidence first, derived artifacts later</span></div>
+        <div class="footer-line"><span>data roles</span><span>content objects + retrieval signals + derived stores</span></div>
         <aside class="speaker-note">
-          <p>这一页是总图区分。默认自动链路是 event 进入 capture，形成 observation，并在写入时更新 BM25 和 vector index；这个链路只保证证据可被搜索。summary、memory 和 knowledge graph 都不是每条 observation 写入时同步生成的同一种东西。summary 面向一个 session，服务 handoff、context 和后续整理，不直接写 recall index 或 graph。memory 可以来自显式 remember，也可以来自 consolidation，它把多条 evidence 归纳成长期结论，保存后才可以进入检索。knowledge graph 则依赖 graph extraction，从 observations 抽实体和关系，形成关系索引；是否运行取决于相应整理流程和配置。</p>
+          <p>这一页把可返回内容、检索索引和派生 store 分开。底层仍然是同一个 iii-engine StateModule 管理的 KV / SQLite state，不是三套数据库；区别在逻辑角色。recall 最终主要返回 observation 和长期 memory。BM25 和 vector 是排序信号，relation store 是从 observations 抽出的实体关系索引，retrieval 可以用它做 graph expansion 来扩展候选；这些信号可以组合排序，但它们本身不是新的 memory。summary 写入 KV.summaries，服务 handoff、context、recap 和后续 consolidation，不直接进入 recall top-k，也不直接写 BM25/vector 或 graph。</p>
         </aside>
       </section>
 

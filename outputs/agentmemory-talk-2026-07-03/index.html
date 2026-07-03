@@ -368,7 +368,7 @@
       top: 50%;
       width: 14px;
       height: 1px;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(15, 20, 30, 0.14);
     }
     .flow-step .num {
       color: var(--amber);
@@ -1049,12 +1049,12 @@
       align-items: center;
       gap: 4px;
       padding: 5px;
-      border: 1px solid rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(15, 20, 30, 0.1);
       border-radius: 999px;
-      background: rgba(10, 12, 14, 0.72);
+      background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(20px) saturate(140%);
       -webkit-backdrop-filter: blur(20px) saturate(140%);
-      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 32px rgba(15, 20, 30, 0.12);
       z-index: 10;
     }
     .controls button {
@@ -1069,7 +1069,7 @@
       transition: color 0.15s, background 0.15s;
     }
     .controls button:hover, .controls button.active {
-      background: rgba(255, 255, 255, 0.07);
+      background: rgba(15, 20, 30, 0.06);
       color: var(--ink);
     }
     .page-indicator {
@@ -1087,12 +1087,12 @@
       top: 18px;
       bottom: 18px;
       width: min(430px, 34vw);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(15, 20, 30, 0.1);
       border-radius: 12px;
-      background: rgba(12, 15, 19, 0.94);
+      background: rgba(255, 255, 255, 0.97);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 60px rgba(15, 20, 30, 0.15);
       z-index: 20;
       padding: 20px;
       display: none;
@@ -1137,9 +1137,9 @@
 
     @media print {
       @page { size: 16in 9in; margin: 0; }
-      body { overflow: visible; background: #0c0e10; }
+      body { overflow: visible; background: #ffffff; }
       .deck-shell { display: block; width: auto; height: auto; padding: 0; }
-      .deck { width: 16in; height: auto; border: 0; box-shadow: none; overflow: visible; }
+      .deck { width: 16in; height: auto; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
       .slide {
         position: relative;
         display: grid !important;

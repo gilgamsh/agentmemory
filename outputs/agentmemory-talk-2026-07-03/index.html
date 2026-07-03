@@ -455,14 +455,14 @@
       right: 0;
       top: 50%;
       height: 1px;
-      background: rgba(255, 255, 255, 0.09);
+      background: rgba(15, 20, 30, 0.1);
       z-index: -1;
     }
     .arch-core {
       grid-column: 2 / span 2;
       grid-row: 2 / span 2;
-      border-color: rgba(106, 209, 154, 0.4);
-      background: linear-gradient(180deg, rgba(106, 209, 154, 0.14), rgba(106, 209, 154, 0.03));
+      border-color: rgba(10, 156, 92, 0.35);
+      background: linear-gradient(180deg, rgba(10, 156, 92, 0.1), rgba(10, 156, 92, 0.02));
       text-align: center;
     }
     .arch-core strong { font-size: 28px; letter-spacing: -0.01em; }
@@ -492,16 +492,16 @@
     }
     .hook {
       padding: 7px 11px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(15, 20, 30, 0.1);
       border-radius: 7px;
-      background: rgba(255, 255, 255, 0.025);
+      background: #f4f5f7;
       color: var(--ink-2);
       font-family: var(--mono);
       font-size: 12px;
       white-space: nowrap;
     }
-    .hook.capture { border-color: rgba(106, 209, 154, 0.4); background: rgba(106, 209, 154, 0.08); }
-    .hook.inject { border-color: rgba(126, 193, 216, 0.4); background: rgba(126, 193, 216, 0.06); }
+    .hook.capture { border-color: rgba(10, 156, 92, 0.4); background: rgba(10, 156, 92, 0.08); color: #0a5c39; }
+    .hook.inject { border-color: rgba(10, 143, 181, 0.4); background: rgba(10, 143, 181, 0.07); color: #063a4c; }
 
     .path-stack {
       display: grid;
@@ -523,11 +523,11 @@
       border-radius: 50%;
       display: grid;
       place-items: center;
-      background: rgba(106, 209, 154, 0.14);
+      background: rgba(10, 156, 92, 0.12);
       color: var(--green);
       font-family: var(--mono);
       font-size: 12px;
-      border: 1px solid rgba(106, 209, 154, 0.28);
+      border: 1px solid rgba(10, 156, 92, 0.3);
     }
     .path-row strong { display: block; font-size: 16px; color: var(--ink); }
     .path-row span { display: block; color: var(--muted); font-size: 13px; line-height: 1.4; margin-top: 3px; }
@@ -562,10 +562,10 @@
       text-transform: uppercase;
     }
     .formula {
-      border: 1px dashed rgba(255, 255, 255, 0.14);
+      border: 1px dashed rgba(15, 20, 30, 0.22);
       border-radius: 10px;
       padding: 18px;
-      background: rgba(0, 0, 0, 0.25);
+      background: #fafbfc;
       font-family: var(--mono);
       color: var(--ink-2);
       font-size: 16px;
@@ -619,21 +619,21 @@
       min-height: 0;
     }
     .terminal {
-      background: #06090b;
-      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: #0f1419;
+      border: 1px solid rgba(15, 20, 30, 0.15);
       border-radius: 10px;
       padding: 16px;
       font-family: var(--mono);
       font-size: 13px;
-      color: var(--ink-2);
+      color: #d4d9df;
       line-height: 1.6;
       overflow: hidden;
       min-height: 0;
-      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+      box-shadow: 0 4px 12px rgba(15, 20, 30, 0.08);
     }
-    .terminal .prompt { color: var(--green); }
-    .terminal .key { color: var(--cyan); }
-    .terminal .ok { color: var(--green); }
+    .terminal .prompt { color: #6ad19a; }
+    .terminal .key { color: #7ec1d8; }
+    .terminal .ok { color: #6ad19a; }
 
     .screenshot-grid {
       display: grid;
@@ -645,7 +645,7 @@
       border: 1px solid rgba(15, 20, 30, 0.08);
       border-radius: 10px;
       overflow: hidden;
-      background: rgba(255, 255, 255, 0.02);
+      background: #ffffff;
       display: grid;
       grid-template-rows: 24px 1fr;
       min-height: 0;
@@ -972,8 +972,8 @@
       min-height: 74px;
     }
     .artifact-row.primary {
-      border-color: rgba(106, 209, 154, 0.4);
-      background: linear-gradient(180deg, rgba(106, 209, 154, 0.11), rgba(106, 209, 154, 0.02));
+      border-color: rgba(10, 156, 92, 0.38);
+      background: linear-gradient(180deg, rgba(10, 156, 92, 0.1), rgba(10, 156, 92, 0.02));
     }
     .artifact-row.branch {
       border-style: dashed;
